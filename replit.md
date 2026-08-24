@@ -1,6 +1,6 @@
-# [Project name]
+# AI CyberGuard
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+AI CyberGuard is a defensive security operations center that scores user-provided URLs and messages, summarizes workspace risk, and tracks alerts.
 
 ## Run & Operate
 
@@ -22,15 +22,20 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/ai-cyberguard` — React/Vite application and SOC dashboard routes.
+- `artifacts/api-server/src/routes` — API handlers for dashboard summaries, alerts, and safe analyzers.
+- `lib/api-spec/openapi.yaml` — source of truth for generated client and validation contracts.
+- `attached_assets/image_1787558980758.png` — supplied work breakdown and architecture reference.
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The first release uses deterministic, explainable defensive heuristics for URL and message analysis; it does not execute files or probe external systems.
+- The web client consumes generated React Query hooks from the OpenAPI contract rather than calling the API directly with hand-written types.
+- Dashboard and alert data are seeded in the API layer for the initial product slice; persistent PostgreSQL entities remain the next expansion step.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Users can review security posture, trend and threat distribution, inspect recent events, analyze URLs and messages for phishing signals, browse alerts, and manage workspace preferences.
 
 ## User preferences
 

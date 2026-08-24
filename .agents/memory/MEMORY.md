@@ -1,0 +1,1 @@
+- [Orval and Zod compatibility](zod-orval-compatibility.md) — generated validation helpers must match the workspace’s installed Zod major version.

@@ -1,0 +1,822 @@
+# AI CyberGuard — Full-Stack AI Cybersecurity Platform
+
+Build a production-style full-stack web application called **AI CyberGuard**, an AI-powered unified cybersecurity platform that combines multiple defensive security analysis modules into a single dashboard.
+
+## 1. Project Objective
+
+AI CyberGuard should act as a centralized cybersecurity assistant capable of analyzing different types of security threats, assigning risk scores, explaining why something is suspicious, and maintaining a history of security events.
+
+The platform should combine:
+
+* AI-based Network Intrusion Detection
+* AI URL and Website Threat Detection
+* AI Phishing/Fraud Email and Message Detection
+* Wi-Fi Security Analysis
+* File/Malware Static Analysis
+* Login Anomaly Detection
+* Account Takeover Detection
+* DNS Threat Detection
+* QR Code Security Analysis
+* Data Leak / Sensitive Information Detection
+* Unified AI Threat Correlation and Risk Engine
+
+The project must be designed as a **real full-stack application**, not just a frontend connected directly to an AI API.
+
+---
+
+# 2. Technology Stack
+
+## Frontend
+
+Use:
+
+* React
+* JavaScript/TypeScript
+* Tailwind CSS
+* Recharts or another suitable charting library
+
+Create a modern cybersecurity dashboard with responsive design, cards, charts, tables, alerts, filters, and detailed analysis pages.
+
+## Backend
+
+Use:
+
+* Python
+* FastAPI
+* REST APIs
+* JWT-based authentication
+
+The backend should contain separate services/modules for each security analyzer.
+
+## Database
+
+Use:
+
+* PostgreSQL
+
+Store:
+
+* Users
+* Projects
+* Scan history
+* URLs analyzed
+* Message analyses
+* Network events
+* Threat detections
+* Risk scores
+* Alerts
+* Reports
+* Model results
+
+Use Redis optionally for caching and background jobs.
+
+## AI/ML
+
+Use Python-based ML components such as:
+
+* Scikit-learn
+* XGBoost
+* PyTorch where necessary
+* NLP models
+* LLM API for explanations and advanced reasoning
+
+Do not make the entire project dependent on an LLM. Use traditional ML/statistical techniques where appropriate.
+
+---
+
+# 3. Overall Architecture
+
+Implement the following logical architecture:
+
+User
+↓
+React Frontend
+↓
+FastAPI Backend
+↓
+Security Analysis Modules
+↓
+AI/ML Engine
+↓
+Threat Correlation Engine
+↓
+Risk Scoring Engine
+↓
+PostgreSQL
+↓
+Dashboard / Alerts / Reports
+
+The AI/ML engine should provide predictions to the backend, while the backend handles authentication, business logic, database operations, and communication with the frontend.
+
+---
+
+# 4. Main Dashboard
+
+Create a professional cybersecurity dashboard.
+
+Display:
+
+* Overall Security Score
+* Current Threat Level
+* Number of Critical Threats
+* Number of High/Medium/Low Threats
+* Network Threats
+* Suspicious URLs
+* Phishing Messages
+* Suspicious Files
+* Login Anomalies
+* DNS Threats
+* Wi-Fi Security Warnings
+* Recent Security Events
+* Attack Timeline
+* Threat Distribution
+* Risk Trends
+
+Example:
+
+Overall Security Score: 82/100
+
+Threats:
+Critical: 2
+High: 5
+Medium: 11
+Low: 8
+
+Use charts and visual indicators.
+
+---
+
+# 5. AI Network Intrusion Detection System
+
+Create an AI-based network intrusion detection module.
+
+The system should analyze network-flow data and detect:
+
+* Normal traffic
+* DoS/DDoS patterns
+* Port scanning
+* Brute-force activity
+* Botnet-like behavior
+* Abnormal traffic
+* Other suspicious network behavior
+
+Use network-flow features such as:
+
+* Source IP
+* Destination IP
+* Source port
+* Destination port
+* Protocol
+* Flow duration
+* Packet count
+* Byte count
+* Packet rate
+* TCP flags
+
+Support dataset-based analysis initially.
+
+Structure the system so real-time network telemetry can be integrated later through tools such as Zeek or Suricata.
+
+Display:
+
+* Attack type
+* Confidence
+* Risk score
+* Source/destination information
+* Timestamp
+* Explanation
+* Severity
+
+---
+
+# 6. AI URL and Website Security Analyzer
+
+Create a URL analysis page.
+
+Allow the user to enter a URL.
+
+Analyze safe, defensive indicators such as:
+
+* URL structure
+* Domain characteristics
+* HTTPS/TLS
+* Redirect behavior
+* Suspicious patterns
+* Threat-intelligence results
+* Domain reputation where legitimate APIs are available
+* Possible phishing indicators
+
+Return:
+
+* Safe / Suspicious / Malicious / Unknown
+* Risk score from 0–100
+* Confidence
+* Detected indicators
+* Explanation
+* Recommended action
+
+Do not automatically perform dangerous actions against websites.
+
+---
+
+# 7. Browser Extension
+
+Design the architecture so AI CyberGuard can later support a browser extension.
+
+The extension should:
+
+* Detect the current page URL
+* Send the URL to the backend
+* Receive the security assessment
+* Display a simple indicator:
+
+Green = Low Risk
+Yellow = Suspicious
+Red = High Risk
+
+Clicking the extension should show a detailed explanation.
+
+Do not block websites automatically unless the user explicitly enables such functionality.
+
+---
+
+# 8. AI Email / Message Fraud Detector
+
+Create an analyzer where users can paste or upload email/message text.
+
+Detect:
+
+* Phishing
+* Scam/fraud
+* Social engineering
+* Urgency manipulation
+* Credential requests
+* Financial scams
+* Suspicious links
+* Impersonation patterns
+
+Return:
+
+* Classification
+* Risk score
+* Confidence
+* Detected indicators
+* Explanation
+* Recommended action
+
+Example:
+
+Risk: 94/100
+Classification: Likely Phishing
+
+Indicators:
+
+* Urgency
+* Suspicious URL
+* Financial incentive
+* Credential request
+
+Use NLP/ML and optionally an LLM for explanation.
+
+---
+
+# 9. AI Wi-Fi Security Analyzer
+
+Create a defensive Wi-Fi security analysis module.
+
+Analyze networks visible to the user's authorized device and display:
+
+* SSID
+* Security type
+* Encryption
+* Signal strength
+* Channel
+* Open/secured status
+* Security recommendations
+
+Example:
+
+Network: Public_WiFi
+Security: Open
+Risk: High
+
+Recommendation:
+Avoid transmitting sensitive information over unsecured networks.
+
+Do not implement unauthorized access, password cracking, packet injection, deauthentication, or attacks against third-party networks.
+
+---
+
+# 10. File and Malware Static Analyzer
+
+Allow users to upload files for safe static analysis.
+
+Do not execute uploaded files directly on the server.
+
+Analyze defensive indicators such as:
+
+* File type
+* Hash
+* Metadata
+* File size
+* Entropy
+* Strings
+* PE headers for Windows executables
+* Imports
+* Suspicious characteristics
+
+Return:
+
+* Safe / Suspicious / High Risk
+* Risk score
+* Indicators
+* Explanation
+
+Use sandboxing for any future dynamic analysis.
+
+---
+
+# 11. Login Anomaly Detection
+
+Create a behavioral security module.
+
+Analyze login events such as:
+
+* Login time
+* Device
+* Approximate location
+* Failed attempts
+* IP information
+* Session behavior
+
+Detect unusual behavior.
+
+Example:
+
+Normal behavior:
+India
+10 AM
+Known device
+
+New behavior:
+New device
+Unusual time
+Unusual location
+
+Return:
+
+Anomaly Score: 91/100
+Severity: High
+
+---
+
+# 12. Account Takeover Detection
+
+Detect suspicious sequences of account activity.
+
+For example:
+
+Login
+→ New device
+→ Password change
+→ Email change
+→ Unusual activity
+
+The system should correlate these events and flag possible account compromise.
+
+---
+
+# 13. DNS Threat Detection
+
+Analyze DNS logs or authorized network telemetry.
+
+Detect:
+
+* Suspicious domains
+* Abnormal DNS frequency
+* Possible DNS tunneling indicators
+* Algorithmically generated domain-like behavior
+* Unusual DNS patterns
+
+Generate:
+
+* Domain
+* Detection type
+* Confidence
+* Risk score
+* Timestamp
+
+---
+
+# 14. QR Code Security Scanner
+
+Allow users to upload or scan a QR code.
+
+Process:
+
+QR Image
+↓
+Decode QR
+↓
+Extract URL
+↓
+URL Analyzer
+↓
+Threat Intelligence
+↓
+Risk Score
+
+Show:
+
+* Extracted content
+* URL
+* Risk score
+* Threat indicators
+* Recommendation
+
+---
+
+# 15. Data Leak / Sensitive Information Detector
+
+Allow users to paste text or upload code/configuration files.
+
+Detect potential exposure of:
+
+* API keys
+* Access tokens
+* Passwords
+* Private keys
+* Database credentials
+* Personal information
+* Other secrets
+
+Never store detected secrets in plaintext.
+
+Mask sensitive information in the UI.
+
+Example:
+
+API_KEY = ************ABCD
+
+---
+
+# 16. Unified AI Threat Correlation Engine
+
+This is the most important advanced feature.
+
+Do not treat every detection independently.
+
+Correlate events from different modules.
+
+Example:
+
+Email Analyzer
+↓
+Detects suspicious email
+↓
+Finds suspicious URL
+↓
+URL Analyzer marks domain as high risk
+↓
+Network IDS detects unusual traffic
+↓
+Login Analyzer detects unusual login
+↓
+Threat Correlation Engine
+↓
+Possible phishing-based account compromise
+
+The system should generate a unified incident.
+
+Example:
+
+Incident:
+Possible Phishing-Based Account Compromise
+
+Overall Risk:
+94/100
+
+Severity:
+CRITICAL
+
+Evidence:
+
+1. Suspicious email
+2. Malicious URL
+3. Unusual network activity
+4. Abnormal login
+
+---
+
+# 17. AI Risk Engine
+
+Create a central risk-scoring system.
+
+Each module should produce:
+
+* Detection
+* Confidence
+* Severity
+* Evidence
+
+The risk engine combines these signals and calculates an overall risk score.
+
+Example:
+
+0–30 = Low
+31–60 = Medium
+61–80 = High
+81–100 = Critical
+
+Make the scoring system transparent and explainable.
+
+---
+
+# 18. Explainable AI
+
+For every AI detection, show:
+
+* What was detected
+* Why it was detected
+* Important features/signals
+* Confidence
+* Risk score
+* Recommended action
+
+Do not simply display:
+
+"AI says this is malicious."
+
+Instead show meaningful reasoning.
+
+For ML models, use explainability techniques such as SHAP where appropriate.
+
+---
+
+# 19. Security Alerts
+
+Create a centralized alert system.
+
+Each alert should include:
+
+* Alert ID
+* Type
+* Severity
+* Source
+* Timestamp
+* Risk score
+* Description
+* Evidence
+* Recommended action
+* Status
+
+Statuses:
+
+* New
+* Investigating
+* Resolved
+* False Positive
+
+---
+
+# 20. Incident Management
+
+Allow users to open an alert and create an incident.
+
+Incident page should contain:
+
+* Incident summary
+* Timeline
+* Related events
+* Threat indicators
+* Risk score
+* AI explanation
+* Recommended actions
+* Resolution status
+
+---
+
+# 21. Reports
+
+Allow users to generate security reports.
+
+Report should contain:
+
+* Summary
+* Threat statistics
+* Detected incidents
+* Risk trends
+* Attack types
+* Recommendations
+
+Provide downloadable PDF reports if feasible.
+
+---
+
+# 22. Authentication
+
+Implement:
+
+* User registration
+* Login
+* JWT authentication
+* Password hashing
+* Logout
+* Protected routes
+
+Use secure authentication practices.
+
+Never store plaintext passwords.
+
+---
+
+# 23. Database Design
+
+Create normalized PostgreSQL tables for:
+
+users
+projects
+scans
+network_events
+url_scans
+message_scans
+file_scans
+wifi_scans
+login_events
+dns_events
+threats
+incidents
+alerts
+risk_scores
+reports
+
+Use appropriate foreign keys and indexes.
+
+---
+
+# 24. Backend API Structure
+
+Organize APIs logically.
+
+Example:
+
+/api/auth
+/api/dashboard
+/api/network
+/api/url
+/api/messages
+/api/files
+/api/wifi
+/api/login-anomaly
+/api/dns
+/api/qr
+/api/data-leak
+/api/incidents
+/api/alerts
+/api/reports
+
+Keep the backend modular and maintainable.
+
+---
+
+# 25. AI Model Architecture
+
+Create a separate AI/ML layer.
+
+For example:
+
+network_model/
+url_model/
+phishing_model/
+anomaly_model/
+risk_engine/
+explainability/
+
+Store trained model versions and configuration separately.
+
+The application should not retrain models every time a user performs a scan.
+
+---
+
+# 26. Development Strategy
+
+Build the project incrementally.
+
+## Phase 1
+
+Implement:
+
+* Authentication
+* React dashboard
+* FastAPI backend
+* PostgreSQL
+* URL analyzer
+* Message/phishing analyzer
+
+## Phase 2
+
+Add:
+
+* Network IDS
+* Login anomaly detection
+* Risk engine
+* Alerts
+
+## Phase 3
+
+Add:
+
+* Wi-Fi analyzer
+* QR scanner
+* File analyzer
+* DNS analyzer
+* Data leak detection
+
+## Phase 4
+
+Add:
+
+* Threat correlation
+* Explainable AI
+* Browser extension
+* Reports
+* Real-time monitoring
+
+---
+
+# 27. Important Safety Requirements
+
+This is a defensive cybersecurity project.
+
+Only analyze:
+
+* User-provided content
+* Authorized networks
+* Authorized systems
+* Controlled datasets
+* Sandboxed files
+
+Do not implement features designed to:
+
+* Attack external systems
+* Steal credentials
+* Bypass authentication
+* Crack Wi-Fi passwords
+* Perform unauthorized scanning
+* Execute uploaded malware on the host system
+
+Use sandboxing and strict resource limits for any code or file execution.
+
+---
+
+# 28. UI Requirements
+
+Use a professional cybersecurity/SOC-style interface.
+
+Pages:
+
+1. Login
+2. Dashboard
+3. Network IDS
+4. URL Analyzer
+5. Message Analyzer
+6. Wi-Fi Analyzer
+7. File Analyzer
+8. Login Anomaly
+9. DNS Analyzer
+10. QR Scanner
+11. Data Leak Scanner
+12. Alerts
+13. Incidents
+14. Threat Intelligence
+15. Reports
+16. Settings
+
+Use charts, tables, filters, search, severity indicators, and real-time status updates.
+
+Do not make the UI overly flashy. Prioritize clarity and usability.
+
+---
+
+# 29. Final Goal
+
+The finished application should demonstrate:
+
+**Full-Stack Development**
+React + FastAPI + PostgreSQL
+
+**AI/ML**
+Classification + anomaly detection + NLP + explainability
+
+**Cybersecurity**
+IDS + phishing detection + network analysis + threat intelligence
+
+**Software Engineering**
+REST APIs + authentication + database design + modular architecture
+
+**Advanced AI**
+Threat correlation + AI reasoning + unified risk scoring
+
+The final system should feel like a **unified AI-powered Security Operations Center (SOC) assistant for individual users or small organizations**, rather than a collection of unrelated scanners.
+
+Build the project in a modular way so every security module can be developed, tested, and deployed independently while still contributing events to the central AI Threat Correlation and Risk Engine.

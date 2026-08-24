@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "AI CyberGuard"
+description = "A unified AI-powered cybersecurity operations center for analyzing URLs and messages, scoring defensive security signals, tracking incidents, and expanding into modular threat detection workflows."
+version = "1.0.0"
+id = "artifacts/ai-cyberguard"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20865
+
+[services.development]
+run = "pnpm --filter @workspace/ai-cyberguard run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ai-cyberguard", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/ai-cyberguard/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20865"
+BASE_PATH = "/"
