@@ -1,15 +1,29 @@
 import { Router, type IRouter } from "express";
-import { GetAlertsResponse } from "@workspace/api-zod";
+import { dataStore } from "../services/store";
+import { wsHub } from "../services/websocket";
 
 const router: IRouter = Router();
 
-router.get("/alerts", (_req, res) => {
-  const alerts = [
-    { id: "ALT-2048", title: "Possible phishing-based account compromise", source: "Threat Correlation", severity: "CRITICAL" as const, score: 94, status: "NEW" as const, timestamp: "2026-08-24T06:54:00.000Z", description: "Suspicious message, high-risk URL, and abnormal login signals appeared in the same activity window." },
-    { id: "ALT-2047", title: "Lookalike domain detected", source: "URL Analyzer", severity: "HIGH" as const, score: 78, status: "INVESTIGATING" as const, timestamp: "2026-08-24T08:42:00.000Z", description: "A domain contains structural indicators commonly associated with impersonation." },
-    { id: "ALT-2046", title: "New device sign-in", source: "Identity Guard", severity: "MEDIUM" as const, score: 56, status: "RESOLVED" as const, timestamp: "2026-08-24T07:18:00.000Z", description: "A login from a new device was confirmed by the account owner." },
-  ];
-  res.json(GetAlertsResponse.parse(alerts));
+router.get("/alerts", async (_req, res) => {
+  const alerts = await dataStore.getAlerts();
+  return res.json(alerts);
+});
+
+router.patch("/alerts/:id/status", async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body || {};
+
+  if (!["NEW", "INVESTIGATING", "RESOLVED", "FALSE_POSITIVE"].includes(status)) {
+    return res.status(400).json({ error: "Invalid status value" });
+  }
+
+  const updated = await dataStore.updateAlertStatus(id, status);
+  if (!updated) {
+    return res.status(404).json({ error: "Alert not found" });
+  }
+
+  wsHub.broadcast("ALERT_NEW", updated);
+  return res.json(updated);
 });
 
 export default router;

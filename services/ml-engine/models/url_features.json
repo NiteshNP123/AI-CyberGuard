@@ -1,0 +1,83 @@
+{
+  "features": [
+    "url_length",
+    "domain_length",
+    "path_length",
+    "query_length",
+    "entropy",
+    "digit_ratio",
+    "special_char_ratio",
+    "num_dots",
+    "num_hyphens",
+    "num_underscores",
+    "num_slashes",
+    "num_question_marks",
+    "num_equal_signs",
+    "num_at_symbols",
+    "is_https",
+    "is_ip_host",
+    "is_punycode",
+    "subdomain_count",
+    "has_login_keyword",
+    "has_verify_keyword",
+    "has_account_keyword",
+    "has_update_keyword",
+    "has_banking_keyword",
+    "has_embedded_creds",
+    "suspicious_tld_weight",
+    "path_depth"
+  ],
+  "importances": {
+    "url_length": 0.01676994370120867,
+    "domain_length": 0.16711803760808716,
+    "path_length": 0.011846158728937075,
+    "query_length": 0.00517833076139174,
+    "entropy": 0.003650894812762601,
+    "digit_ratio": 0.00652367654010858,
+    "special_char_ratio": 0.08552126518663195,
+    "num_dots": 0.01952356318027948,
+    "num_hyphens": 0.07694493303899219,
+    "num_underscores": 0.0017789686747799148,
+    "num_slashes": 0.03737596439862987,
+    "num_question_marks": 0.0028846854986207585,
+    "num_equal_signs": 0.0023970710005847993,
+    "num_at_symbols": 0.004251345829493981,
+    "is_https": 0.28984872074094664,
+    "is_ip_host": 0.009487847969106613,
+    "is_punycode": 0.0027288315493218846,
+    "subdomain_count": 0.03261989688850998,
+    "has_login_keyword": 0.014154250102971642,
+    "has_verify_keyword": 0.01380556902721114,
+    "has_account_keyword": 0.0,
+    "has_update_keyword": 0.008279768193237126,
+    "has_banking_keyword": 0.006604795329447491,
+    "has_embedded_creds": 0.004757223987446687,
+    "suspicious_tld_weight": 0.1511410885192925,
+    "path_depth": 0.024807168731999625
+  },
+  "metrics": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "roc_auc": 1.0,
+    "confusion_matrix": [
+      [
+        15,
+        0
+      ],
+      [
+        0,
+        15
+      ]
+    ],
+    "training_samples": 120
+  },
+  "version": "1.0.0",
+  "dataset_sources": [
+    "ISCX-URL2016",
+    "PhishTank Verified Feeds",
+    "OpenPhish Community Feed",
+    "Alexa/Tranco Top 1M Benign Sample"
+  ],
+  "limitations": "Model focuses on lexical, domain structure, TLD reputation, and transport indicators. Does not perform dynamic page rendering or sandbox detonation."
+}

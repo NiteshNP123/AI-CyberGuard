@@ -1,7 +1,8 @@
 import { Activity, Bell, FileSearch, LayoutDashboard, Menu, MessageSquareText, Settings, ShieldCheck, Wifi } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
-import { getHealthCheckQueryKey, useHealthCheck } from '@workspace/api-client-react';
+import { getHealthCheckQueryKey, useHealthCheck, getGetAlertsQueryKey, useGetAlerts } from '@workspace/api-client-react';
+import { useRealtimeSoc } from '@/hooks/use-realtime-soc';
 
 const navItems = [
   { href: '/', label: 'Overview', icon: LayoutDashboard },
@@ -11,20 +12,27 @@ const navItems = [
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
-function NavItem({ href, label, icon: Icon }: (typeof navItems)[number]) {
+function NavItem({ href, label, icon: Icon, alertCount }: (typeof navItems)[number] & { alertCount?: number }) {
   const [location] = useLocation();
   const active = href === '/' ? location === '/' : location.startsWith(href);
   return (
     <Link href={href} data-testid={`link-nav-${label.toLowerCase().replaceAll(' ', '-')}`} className={`group flex items-center gap-3 rounded-lg border px-3 py-2.5 text-[12px] font-semibold transition-colors ${active ? 'cg-nav-active border-transparent' : 'border-transparent text-[hsl(var(--sidebar-foreground)/.65)] hover:border-[hsl(var(--sidebar-border))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-[hsl(var(--sidebar-foreground))]'}`}>
       <Icon size={16} strokeWidth={active ? 2.5 : 1.8} />
       <span>{label}</span>
-      {label === 'Alerts' && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[hsl(var(--accent))]" />}
+      {label === 'Alerts' && (alertCount ?? 0) > 0 && (
+        <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[9px] font-extrabold text-destructive-foreground">
+          {alertCount}
+        </span>
+      )}
     </Link>
   );
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const { connected } = useRealtimeSoc();
   const { data: health, isLoading: healthLoading } = useHealthCheck({ query: { queryKey: getHealthCheckQueryKey() } });
+  const { data: alerts } = useGetAlerts({ query: { queryKey: getGetAlertsQueryKey() } });
+  const activeAlertsCount = (alerts || []).filter((a) => a.status === 'NEW' || a.status === 'INVESTIGATING').length;
   return (
     <div className="flex min-h-[100dvh] bg-background text-foreground">
       <aside className="cg-desktop-nav fixed inset-y-0 left-0 z-20 flex w-[246px] flex-col border-r border-[hsl(var(--sidebar-border))] bg-sidebar text-sidebar-foreground">
@@ -43,10 +51,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[hsl(var(--accent)/.16)] text-[hsl(var(--accent))] text-[11px] font-extrabold">NS</div>
             <div className="min-w-0"><div className="truncate text-[12px] font-bold">Northstar Studio</div><div className="cg-kicker !text-[hsl(var(--sidebar-foreground)/.42)]">personal workspace</div></div>
           </div>
-          <nav className="space-y-1">{navItems.map((item) => <NavItem key={item.href} {...item} />)}</nav>
+          <nav className="space-y-1">{navItems.map((item) => <NavItem key={item.href} {...item} alertCount={activeAlertsCount} />)}</nav>
         </div>
         <div className="mt-auto border-t border-[hsl(var(--sidebar-border))] px-5 py-5">
-          <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold text-[hsl(var(--sidebar-foreground)/.72)]"><span className={`cg-alert-dot ${healthLoading ? 'animate-pulse' : ''}`} />{health?.status === 'ok' ? 'Protection active' : healthLoading ? 'Checking systems' : 'Protection ready'}</div>
+          <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold text-[hsl(var(--sidebar-foreground)/.72)]">
+            <span className={`cg-alert-dot ${connected ? 'bg-primary' : 'bg-amber-500 animate-pulse'}`} />
+            {connected ? 'Live SOC Stream' : 'Connecting to SOC...'}
+          </div>
           <div className="flex items-center gap-3"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[hsl(var(--sidebar-primary)/.18)] text-[11px] font-extrabold text-[hsl(var(--sidebar-primary))]">AM</div><div className="min-w-0"><div className="truncate text-[12px] font-bold">Avery Mitchell</div><div className="truncate text-[10px] text-[hsl(var(--sidebar-foreground)/.45)]">Owner · Northstar</div></div><Wifi className="ml-auto text-[hsl(var(--sidebar-foreground)/.4)]" size={14} /></div>
         </div>
       </aside>
@@ -54,7 +65,17 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="flex h-[70px] items-center justify-between border-b border-border bg-background/90 px-5 backdrop-blur-md md:px-9">
           <div className="flex items-center gap-3 md:hidden"><Menu size={18} /><span className="text-[14px] font-extrabold">AI CyberGuard</span></div>
           <div className="hidden items-center gap-2 md:flex"><Activity size={15} className="text-primary" /><span className="cg-mono text-[11px] text-muted-foreground">SOC / NORTHSTAR / LIVE FEED</span></div>
-          <div className="ml-auto flex items-center gap-3"><div className="hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[10px] font-bold text-muted-foreground sm:flex"><span className="h-1.5 w-1.5 rounded-full bg-primary" />All systems nominal</div><button data-testid="button-header-notifications" className="cg-focus relative rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"><Bell size={17} /><span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-accent" /></button><div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-[11px] font-extrabold text-primary">AM</div></div>
+          <div className="ml-auto flex items-center gap-3">
+            <div className="hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[10px] font-bold text-muted-foreground sm:flex">
+              <span className={`h-1.5 w-1.5 rounded-full ${connected ? 'bg-primary' : 'bg-amber-500'}`} />
+              {connected ? 'Real-Time Telemetry Active' : 'Connecting Stream...'}
+            </div>
+            <Link href="/alerts" data-testid="button-header-notifications" className="cg-focus relative rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground">
+              <Bell size={17} />
+              {activeAlertsCount > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive" />}
+            </Link>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-[11px] font-extrabold text-primary">AM</div>
+          </div>
         </header>
         <main className="cg-main flex-1 px-4 py-6 md:px-9 md:py-8">{children}</main>
       </div>

@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "AI CyberGuard - Real-Time Defensive Threat Shield",
+  "version": "1.0.0",
+  "description": "Privacy-conscious URL threat scoring and phishing detection powered by AI CyberGuard SOC.",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AI CyberGuard Threat Shield"
+  }
+}
