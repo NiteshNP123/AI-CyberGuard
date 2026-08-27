@@ -26,7 +26,7 @@ export function EmptyState({ icon: Icon = CircleHelp, title, detail }: { icon?: 
 export function SkeletonBlock({ className = '' }: { className?: string }) { return <div className={`cg-skeleton rounded-lg ${className}`} aria-label="Loading" />; }
 
 export function ClassificationMark({ classification }: { classification: string }) {
-  const safe = classification.toLowerCase(); const good = safe === 'safe'; const bad = safe === 'malicious'; 
+  const safe = classification.toLowerCase(); const good = safe === 'safe'; const bad = safe === 'malicious';
   return <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${good ? 'bg-primary/12 text-primary' : bad ? 'bg-destructive/12 text-destructive' : 'bg-accent/18 text-[hsl(28_81%_44%)]'}`}>{good ? <ShieldCheck size={24} /> : bad ? <ShieldAlert size={24} /> : <AlertTriangle size={24} />}</div>;
 }
 

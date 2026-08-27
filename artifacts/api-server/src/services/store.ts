@@ -13,13 +13,15 @@ import {
   alertsTable,
   incidentsTable,
   loginProfilesTable,
+  settingsTable,
   type SecurityEventRecord,
   type AlertRecord,
   type IncidentRecord,
   type UrlScanRecord,
   type MessageScanRecord,
   type NetworkEventRecord,
-  type LoginProfileRecord
+  type LoginProfileRecord,
+  type SettingsRecord
 } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 
@@ -38,7 +40,20 @@ interface LocalStoreState {
   fileScans: any[];
   // Persistent login profiles: username -> baseline data
   loginProfiles: Record<string, { knownIps: string[]; knownUserAgents: string[]; failedAttempts: number; lastLoginAt: string }>;
+  settings: SettingsRecord;
 }
+
+const DEFAULT_SETTINGS: SettingsRecord = {
+  id: "default",
+  name: "Avery Mitchell",
+  workspaceName: "Northstar Studio",
+  notificationEmail: "avery@northstar.studio",
+  criticalAlerts: true,
+  weeklyDigest: false,
+  dataRetention: "30 days",
+  scanConfirmation: true,
+  updatedAt: new Date()
+};
 
 class DataStoreService {
   private localState: LocalStoreState = {
@@ -51,7 +66,8 @@ class DataStoreService {
     dnsEvents: [],
     loginEvents: [],
     fileScans: [],
-    loginProfiles: {}
+    loginProfiles: {},
+    settings: { ...DEFAULT_SETTINGS }
   };
 
   constructor() {
@@ -65,7 +81,23 @@ class DataStoreService {
       }
       if (fs.existsSync(DATA_FILE)) {
         const raw = fs.readFileSync(DATA_FILE, "utf-8");
-        this.localState = JSON.parse(raw);
+        const loaded = JSON.parse(raw);
+        // Merge with defaults so new fields (e.g. loginProfiles, settings) are never undefined
+        this.localState = {
+          events: loaded.events ?? [],
+          alerts: loaded.alerts ?? [],
+          incidents: loaded.incidents ?? [],
+          urlScans: loaded.urlScans ?? [],
+          messageScans: loaded.messageScans ?? [],
+          networkEvents: loaded.networkEvents ?? [],
+          dnsEvents: loaded.dnsEvents ?? [],
+          loginEvents: loaded.loginEvents ?? [],
+          fileScans: loaded.fileScans ?? [],
+          loginProfiles: loaded.loginProfiles ?? {},
+          settings: loaded.settings
+            ? { ...DEFAULT_SETTINGS, ...loaded.settings, updatedAt: new Date(loaded.settings.updatedAt || Date.now()) }
+            : { ...DEFAULT_SETTINGS }
+        };
       } else {
         this.persistLocalStore();
       }
@@ -177,6 +209,57 @@ class DataStoreService {
       return item;
     }
     return null;
+  }
+
+  /** Marks all active (NEW / INVESTIGATING) alerts as RESOLVED in DB and local state. */
+  async bulkResolveAlerts(): Promise<number> {
+    const activeStatuses: Array<"NEW" | "INVESTIGATING"> = ["NEW", "INVESTIGATING"];
+    let count = 0;
+    if (db) {
+      try {
+        // Resolve in DB one by one (compatible with Drizzle's type-safe where)
+        for (const status of activeStatuses) {
+          const rows = await db.select({ id: alertsTable.id }).from(alertsTable).where(eq(alertsTable.status, status));
+          for (const row of rows) {
+            await db.update(alertsTable).set({ status: "RESOLVED" }).where(eq(alertsTable.id, row.id));
+            count++;
+          }
+        }
+      } catch (err) {
+        console.warn("DB bulkResolveAlerts error:", err);
+      }
+    }
+    // Update local state
+    for (const alert of this.localState.alerts) {
+      if (alert.status === "NEW" || alert.status === "INVESTIGATING") {
+        alert.status = "RESOLVED";
+        count++;
+      }
+    }
+    this.persistLocalStore();
+    return count;
+  }
+
+  /** Permanently deletes ALL alerts from DB and local state. */
+  async clearAllAlerts(): Promise<number> {
+    let count = 0;
+    if (db) {
+      try {
+        const rows = await db.select({ id: alertsTable.id }).from(alertsTable);
+        count = rows.length;
+        // Delete in batch
+        for (const row of rows) {
+          await db.delete(alertsTable).where(eq(alertsTable.id, row.id));
+        }
+      } catch (err) {
+        console.warn("DB clearAllAlerts error:", err);
+      }
+    } else {
+      count = this.localState.alerts.length;
+    }
+    this.localState.alerts = [];
+    this.persistLocalStore();
+    return count;
   }
 
   // Incidents
@@ -414,6 +497,81 @@ class DataStoreService {
       lastLoginAt: data.lastLoginAt.toISOString()
     };
     this.persistLocalStore();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Workspace and User Settings Persistence
+  // ---------------------------------------------------------------------------
+
+  /** Returns the current workspace and account settings (DB-first, file fallback). */
+  async getSettings(): Promise<SettingsRecord> {
+    if (db) {
+      try {
+        const rows = await db
+          .select()
+          .from(settingsTable)
+          .where(eq(settingsTable.id, "default"))
+          .limit(1);
+        if (rows.length > 0) {
+          return rows[0];
+        }
+        // If not present in DB, insert default row
+        await db.insert(settingsTable).values(DEFAULT_SETTINGS).onConflictDoNothing();
+        return DEFAULT_SETTINGS;
+      } catch (err) {
+        console.warn("DB getSettings error, falling back to local store:", err);
+      }
+    }
+    return this.localState.settings;
+  }
+
+  /** Updates and persists the workspace and account settings. */
+  async updateSettings(updates: Partial<Omit<SettingsRecord, "id" | "updatedAt">>): Promise<SettingsRecord> {
+    const now = new Date();
+    const current = await this.getSettings();
+    const updated: SettingsRecord = {
+      ...current,
+      ...updates,
+      id: "default",
+      updatedAt: now
+    };
+
+    if (db) {
+      try {
+        await db
+          .insert(settingsTable)
+          .values({
+            id: "default",
+            name: updated.name,
+            workspaceName: updated.workspaceName,
+            notificationEmail: updated.notificationEmail,
+            criticalAlerts: updated.criticalAlerts,
+            weeklyDigest: updated.weeklyDigest,
+            dataRetention: updated.dataRetention,
+            scanConfirmation: updated.scanConfirmation,
+            updatedAt: now as any
+          })
+          .onConflictDoUpdate({
+            target: settingsTable.id,
+            set: {
+              name: updated.name,
+              workspaceName: updated.workspaceName,
+              notificationEmail: updated.notificationEmail,
+              criticalAlerts: updated.criticalAlerts,
+              weeklyDigest: updated.weeklyDigest,
+              dataRetention: updated.dataRetention,
+              scanConfirmation: updated.scanConfirmation,
+              updatedAt: now as any
+            }
+          });
+      } catch (err) {
+        console.warn("DB updateSettings error:", err);
+      }
+    }
+
+    this.localState.settings = updated;
+    this.persistLocalStore();
+    return updated;
   }
 }
 

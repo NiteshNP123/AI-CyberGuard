@@ -18,6 +18,8 @@ export * from './healthStatus';
 export * from './limitParameter';
 export * from './messageAnalysisInput';
 export * from './securityEvent';
+export * from './settings';
 export * from './severity';
 export * from './trendPoint';
+export * from './updateSettingsInput';
 export * from './urlAnalysisInput';

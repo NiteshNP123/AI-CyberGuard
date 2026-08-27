@@ -11,7 +11,37 @@ tags:
   - name: dashboard
   - name: analysis
   - name: alerts
+  - name: settings
 paths:
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get workspace and user settings
+      responses:
+        "200":
+          description: Current settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+    put:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update workspace and user settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSettingsInput"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
   /healthz:
     get:
       operationId: healthCheck
@@ -220,3 +250,26 @@ components:
         detail: { type: string }
         weight: { type: number }
       required: [name, detail, weight]
+    Settings:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        workspaceName: { type: string }
+        notificationEmail: { type: string }
+        criticalAlerts: { type: boolean }
+        weeklyDigest: { type: boolean }
+        dataRetention: { type: string }
+        scanConfirmation: { type: boolean }
+        updatedAt: { type: string, format: date-time }
+      required: [id, name, workspaceName, notificationEmail, criticalAlerts, weeklyDigest, dataRetention, scanConfirmation]
+    UpdateSettingsInput:
+      type: object
+      properties:
+        name: { type: string }
+        workspaceName: { type: string }
+        notificationEmail: { type: string }
+        criticalAlerts: { type: boolean }
+        weeklyDigest: { type: boolean }
+        dataRetention: { type: string }
+        scanConfirmation: { type: boolean }

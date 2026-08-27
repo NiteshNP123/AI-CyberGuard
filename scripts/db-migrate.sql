@@ -138,6 +138,19 @@ CREATE TABLE IF NOT EXISTS incidents (
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Workspace and user configuration settings
+CREATE TABLE IF NOT EXISTS settings (
+    id                  TEXT PRIMARY KEY DEFAULT 'default',
+    name                TEXT NOT NULL DEFAULT 'Avery Mitchell',
+    workspace_name      TEXT NOT NULL DEFAULT 'Northstar Studio',
+    notification_email  TEXT NOT NULL DEFAULT 'avery@northstar.studio',
+    critical_alerts     BOOLEAN NOT NULL DEFAULT TRUE,
+    weekly_digest       BOOLEAN NOT NULL DEFAULT FALSE,
+    data_retention      TEXT NOT NULL DEFAULT '30 days',
+    scan_confirmation   BOOLEAN NOT NULL DEFAULT TRUE,
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Indexes for common query patterns
 CREATE INDEX IF NOT EXISTS idx_security_events_timestamp ON security_events(timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_security_events_type ON security_events(type);

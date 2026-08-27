@@ -7,11 +7,76 @@ import { ThreatCorrelationEngine } from "../services/correlation";
 
 const router: IRouter = Router();
 
+// ---------------------------------------------------------------------------
+// In-process sensor gate (external sensor is scripts/network-sensor.py).
+// The gate controls whether the API accepts or rejects incoming telemetry.
+// When stopped, the Python sensor will receive 503 responses and back off.
+// ---------------------------------------------------------------------------
+interface SensorStatus {
+  enabled: boolean;
+  stoppedAt: Date | null;
+  startedAt: Date | null;
+  flowsIngested: number;
+}
+
+const sensorState: SensorStatus = {
+  enabled: true,
+  stoppedAt: null,
+  startedAt: new Date(),
+  flowsIngested: 0
+};
+
+/** GET /network/sensor/status — Returns the current sensor gate status. */
+router.get("/network/sensor/status", (_req, res) => {
+  return res.json({
+    enabled: sensorState.enabled,
+    startedAt: sensorState.startedAt,
+    stoppedAt: sensorState.stoppedAt,
+    flowsIngested: sensorState.flowsIngested,
+    message: sensorState.enabled
+      ? "Network telemetry ingestion is ACTIVE. The sensor is accepting flow records."
+      : "Network telemetry ingestion is PAUSED. No new flows or alerts will be generated until the sensor is restarted."
+  });
+});
+
+/** POST /network/sensor/start — Re-enables telemetry ingestion. */
+router.post("/network/sensor/start", (_req, res) => {
+  if (sensorState.enabled) {
+    return res.json({ enabled: true, message: "Sensor is already running." });
+  }
+  sensorState.enabled = true;
+  sensorState.startedAt = new Date();
+  sensorState.stoppedAt = null;
+  wsHub.broadcast("SENSOR_STATUS", { enabled: true, startedAt: sensorState.startedAt });
+  return res.json({ enabled: true, startedAt: sensorState.startedAt, message: "Sensor started. Telemetry ingestion is now active." });
+});
+
+/** POST /network/sensor/stop — Pauses telemetry ingestion (no new flows or alerts). */
+router.post("/network/sensor/stop", (_req, res) => {
+  if (!sensorState.enabled) {
+    return res.json({ enabled: false, message: "Sensor is already stopped." });
+  }
+  sensorState.enabled = false;
+  sensorState.stoppedAt = new Date();
+  wsHub.broadcast("SENSOR_STATUS", { enabled: false, stoppedAt: sensorState.stoppedAt });
+  return res.json({ enabled: false, stoppedAt: sensorState.stoppedAt, message: "Sensor stopped. No new telemetry will be ingested until restarted." });
+});
+
 /**
+ * POST /network/telemetry
  * Real Network Flow Ingestion Endpoint
  * Compatible with Zeek conn.log / Suricata eve.json / Flow collectors.
+ * Returns 503 when the sensor gate is stopped.
  */
 router.post("/network/telemetry", async (req, res) => {
+  // Gate: reject inbound telemetry if sensor is stopped
+  if (!sensorState.enabled) {
+    return res.status(503).json({
+      error: "Network sensor is stopped",
+      message: "Telemetry ingestion is paused. Start the sensor to resume."
+    });
+  }
+
   const payload = req.body || {};
   const {
     srcIp = "192.168.1.50",
@@ -54,6 +119,7 @@ router.post("/network/telemetry", async (req, res) => {
 
   const eventId = `net-${randomUUID().slice(0, 8)}`;
   const now = new Date();
+  sensorState.flowsIngested++;
 
   // Save to persistent database
   const netRecord = await dataStore.insertNetworkEvent({
@@ -116,4 +182,5 @@ router.post("/network/telemetry", async (req, res) => {
   });
 });
 
+export { sensorState };
 export default router;

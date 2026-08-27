@@ -125,6 +125,28 @@ export interface AnalysisResult {
   analyzedAt: string;
 }
 
+export interface Settings {
+  id: string;
+  name: string;
+  workspaceName: string;
+  notificationEmail: string;
+  criticalAlerts: boolean;
+  weeklyDigest: boolean;
+  dataRetention: string;
+  scanConfirmation: boolean;
+  updatedAt?: string;
+}
+
+export interface UpdateSettingsInput {
+  name?: string;
+  workspaceName?: string;
+  notificationEmail?: string;
+  criticalAlerts?: boolean;
+  weeklyDigest?: boolean;
+  dataRetention?: string;
+  scanConfirmation?: boolean;
+}
+
 export type LimitParameter = number;
 
 export type GetRecentEventsParams = {

@@ -1,7 +1,7 @@
 import { Activity, Bell, FileSearch, LayoutDashboard, Menu, MessageSquareText, Settings, ShieldCheck, Wifi } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
-import { getHealthCheckQueryKey, useHealthCheck, getGetAlertsQueryKey, useGetAlerts } from '@workspace/api-client-react';
+import { getHealthCheckQueryKey, useHealthCheck, getGetAlertsQueryKey, useGetAlerts, getGetSettingsQueryKey, useGetSettings } from '@workspace/api-client-react';
 import { useRealtimeSoc } from '@/hooks/use-realtime-soc';
 
 const navItems = [
@@ -32,7 +32,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { connected } = useRealtimeSoc();
   const { data: health, isLoading: healthLoading } = useHealthCheck({ query: { queryKey: getHealthCheckQueryKey() } });
   const { data: alerts } = useGetAlerts({ query: { queryKey: getGetAlertsQueryKey() } });
+  const { data: settings } = useGetSettings({ query: { queryKey: getGetSettingsQueryKey() } });
+
   const activeAlertsCount = (alerts || []).filter((a) => a.status === 'NEW' || a.status === 'INVESTIGATING').length;
+
+  const displayName = settings?.name || 'Avery Mitchell';
+  const workspaceName = settings?.workspaceName || 'Northstar Studio';
+  const userInitials = displayName.split(' ').filter(Boolean).map((n) => n[0]).join('').slice(0, 2).toUpperCase() || 'AM';
+  const workspaceInitials = workspaceName.split(' ').filter(Boolean).map((w) => w[0]).join('').slice(0, 2).toUpperCase() || 'NS';
+
   return (
     <div className="flex min-h-[100dvh] bg-background text-foreground">
       <aside className="cg-desktop-nav fixed inset-y-0 left-0 z-20 flex w-[246px] flex-col border-r border-[hsl(var(--sidebar-border))] bg-sidebar text-sidebar-foreground">
@@ -48,8 +56,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="px-4">
           <div className="mb-3 flex items-center gap-2 px-3"><span className="cg-kicker !text-[hsl(var(--sidebar-foreground)/.4)]">Workspace</span><span className="h-px flex-1 bg-[hsl(var(--sidebar-border))]" /></div>
           <div className="mb-5 flex items-center gap-3 rounded-lg border border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-accent)/.5)] px-3 py-3">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[hsl(var(--accent)/.16)] text-[hsl(var(--accent))] text-[11px] font-extrabold">NS</div>
-            <div className="min-w-0"><div className="truncate text-[12px] font-bold">Northstar Studio</div><div className="cg-kicker !text-[hsl(var(--sidebar-foreground)/.42)]">personal workspace</div></div>
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[hsl(var(--accent)/.16)] text-[hsl(var(--accent))] text-[11px] font-extrabold">{workspaceInitials}</div>
+            <div className="min-w-0"><div className="truncate text-[12px] font-bold">{workspaceName}</div><div className="cg-kicker !text-[hsl(var(--sidebar-foreground)/.42)]">workspace</div></div>
           </div>
           <nav className="space-y-1">{navItems.map((item) => <NavItem key={item.href} {...item} alertCount={activeAlertsCount} />)}</nav>
         </div>
@@ -58,13 +66,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className={`cg-alert-dot ${connected ? 'bg-primary' : 'bg-amber-500 animate-pulse'}`} />
             {connected ? 'Live SOC Stream' : 'Connecting to SOC...'}
           </div>
-          <div className="flex items-center gap-3"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[hsl(var(--sidebar-primary)/.18)] text-[11px] font-extrabold text-[hsl(var(--sidebar-primary))]">AM</div><div className="min-w-0"><div className="truncate text-[12px] font-bold">Avery Mitchell</div><div className="truncate text-[10px] text-[hsl(var(--sidebar-foreground)/.45)]">Owner · Northstar</div></div><Wifi className="ml-auto text-[hsl(var(--sidebar-foreground)/.4)]" size={14} /></div>
+          <div className="flex items-center gap-3"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[hsl(var(--sidebar-primary)/.18)] text-[11px] font-extrabold text-[hsl(var(--sidebar-primary))]">{userInitials}</div><div className="min-w-0"><div className="truncate text-[12px] font-bold">{displayName}</div><div className="truncate text-[10px] text-[hsl(var(--sidebar-foreground)/.45)]">Account Profile</div></div><Wifi className="ml-auto text-[hsl(var(--sidebar-foreground)/.4)]" size={14} /></div>
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col md:ml-[246px]">
         <header className="flex h-[70px] items-center justify-between border-b border-border bg-background/90 px-5 backdrop-blur-md md:px-9">
           <div className="flex items-center gap-3 md:hidden"><Menu size={18} /><span className="text-[14px] font-extrabold">AI CyberGuard</span></div>
-          <div className="hidden items-center gap-2 md:flex"><Activity size={15} className="text-primary" /><span className="cg-mono text-[11px] text-muted-foreground">SOC / NORTHSTAR / LIVE FEED</span></div>
+          <div className="hidden items-center gap-2 md:flex"><Activity size={15} className="text-primary" /><span className="cg-mono text-[11px] text-muted-foreground">SOC / {workspaceName.toUpperCase()} / LIVE FEED</span></div>
           <div className="ml-auto flex items-center gap-3">
             <div className="hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[10px] font-bold text-muted-foreground sm:flex">
               <span className={`h-1.5 w-1.5 rounded-full ${connected ? 'bg-primary' : 'bg-amber-500'}`} />
@@ -74,7 +82,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Bell size={17} />
               {activeAlertsCount > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive" />}
             </Link>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-[11px] font-extrabold text-primary">AM</div>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-[11px] font-extrabold text-primary">{userInitials}</div>
           </div>
         </header>
         <main className="cg-main flex-1 px-4 py-6 md:px-9 md:py-8">{children}</main>
@@ -84,4 +92,4 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
     </div>
   );
-}
+}

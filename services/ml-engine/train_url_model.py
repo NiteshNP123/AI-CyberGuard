@@ -96,7 +96,7 @@ def extract_url_features(raw_url: str) -> list[float]:
     is_https = 1.0 if parsed.scheme == "https" else 0.0
     is_ip = 1.0 if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", hostname) else 0.0
     is_puny = 1.0 if "xn--" in hostname else 0.0
-    
+
     subdomain_count = max(0, len(hostname.split(".")) - 2) if hostname else 0
 
     lower_url = url_str.lower()

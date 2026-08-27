@@ -9,6 +9,48 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Get workspace and user settings
+ */
+export const GetSettingsResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "workspaceName": zod.string(),
+  "notificationEmail": zod.string(),
+  "criticalAlerts": zod.boolean(),
+  "weeklyDigest": zod.boolean(),
+  "dataRetention": zod.string(),
+  "scanConfirmation": zod.boolean(),
+  "updatedAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary Update workspace and user settings
+ */
+export const UpdateSettingsBody = zod.object({
+  "name": zod.string().optional(),
+  "workspaceName": zod.string().optional(),
+  "notificationEmail": zod.string().optional(),
+  "criticalAlerts": zod.boolean().optional(),
+  "weeklyDigest": zod.boolean().optional(),
+  "dataRetention": zod.string().optional(),
+  "scanConfirmation": zod.boolean().optional()
+})
+
+export const UpdateSettingsResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "workspaceName": zod.string(),
+  "notificationEmail": zod.string(),
+  "criticalAlerts": zod.boolean(),
+  "weeklyDigest": zod.boolean(),
+  "dataRetention": zod.string(),
+  "scanConfirmation": zod.boolean(),
+  "updatedAt": zod.coerce.date().optional()
+})
+
+
+/**
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({

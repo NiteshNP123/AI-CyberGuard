@@ -4,11 +4,13 @@ import { wsHub } from "../services/websocket";
 
 const router: IRouter = Router();
 
+/** GET /alerts — List all security alerts (newest first). */
 router.get("/alerts", async (_req, res) => {
   const alerts = await dataStore.getAlerts();
   return res.json(alerts);
 });
 
+/** PATCH /alerts/:id/status — Update the status of a single alert. */
 router.patch("/alerts/:id/status", async (req, res) => {
   const { id } = req.params;
   const { status } = req.body || {};
@@ -24,6 +26,43 @@ router.patch("/alerts/:id/status", async (req, res) => {
 
   wsHub.broadcast("ALERT_NEW", updated);
   return res.json(updated);
+});
+
+/**
+ * POST /alerts/bulk-resolve
+ * Marks all NEW and INVESTIGATING alerts as RESOLVED.
+ * Does NOT delete them — they remain in the history.
+ */
+router.post("/alerts/bulk-resolve", async (_req, res) => {
+  try {
+    const count = await dataStore.bulkResolveAlerts();
+    wsHub.broadcast("ALERTS_BULK_RESOLVED", { count });
+    return res.json({ success: true, resolved: count, message: `${count} alert(s) marked as RESOLVED.` });
+  } catch (err: any) {
+    return res.status(500).json({ error: "Bulk resolve failed", details: err?.message });
+  }
+});
+
+/**
+ * DELETE /alerts
+ * Permanently deletes ALL alerts from the database.
+ * Requires confirmation header: X-Confirm-Clear: "yes-delete-all"
+ */
+router.delete("/alerts", async (req, res) => {
+  const confirm = req.headers["x-confirm-clear"];
+  if (confirm !== "yes-delete-all") {
+    return res.status(400).json({
+      error: "Confirmation required",
+      message: "Send the header X-Confirm-Clear: yes-delete-all to confirm permanent deletion."
+    });
+  }
+  try {
+    const count = await dataStore.clearAllAlerts();
+    wsHub.broadcast("ALERTS_CLEARED", { count });
+    return res.json({ success: true, deleted: count, message: `${count} alert(s) permanently deleted.` });
+  } catch (err: any) {
+    return res.status(500).json({ error: "Clear alerts failed", details: err?.message });
+  }
 });
 
 export default router;

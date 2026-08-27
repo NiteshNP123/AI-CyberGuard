@@ -42,7 +42,7 @@ async function verify() {
   console.log("\n[3/7] Testing WebSocket Real-Time Stream on ws://127.0.0.1:5000/ws ...");
   let wsReceivedEvents = [];
   const ws = new WebSocketClient("ws://127.0.0.1:5000/ws");
-  
+
   await new Promise((resolve) => {
     const timeout = setTimeout(() => {
       console.warn("  -> WebSocket connection timed out after 3s");

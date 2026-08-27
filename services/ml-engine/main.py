@@ -120,7 +120,7 @@ def predict_url(req: UrlPredictRequest):
 
     features = extract_url_features(req.url)
     X = np.array([features])
-    
+
     # Model inference
     prob = float(url_model.predict_proba(X)[0][1]) # Malicious probability (0.0 - 1.0)
     risk_score = int(round(prob * 100))

@@ -9,6 +9,7 @@ import dnsRouter from "./dns";
 import authRouter from "./auth";
 import wifiRouter from "./wifi";
 import secretsRouter from "./secrets";
+import settingsRouter from "./settings";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(dnsRouter);
 router.use(authRouter);
 router.use(wifiRouter);
 router.use(secretsRouter);
+router.use(settingsRouter);
 
 export default router;

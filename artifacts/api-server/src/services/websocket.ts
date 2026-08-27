@@ -3,10 +3,11 @@ import type { Server as HttpServer } from "node:http";
 import { logger } from "../lib/logger";
 
 export interface SocketMessage {
-  type: "EVENT_NEW" | "ALERT_NEW" | "INCIDENT_UPDATE" | "DASHBOARD_UPDATE" | "SYSTEM_HEALTH";
+  type: "EVENT_NEW" | "ALERT_NEW" | "INCIDENT_UPDATE" | "DASHBOARD_UPDATE" | "SYSTEM_HEALTH" | "SENSOR_STATUS" | "ALERTS_BULK_RESOLVED" | "ALERTS_CLEARED";
   payload: any;
   timestamp: string;
 }
+
 
 class WebSocketHub {
   private wss: WebSocketServer | null = null;

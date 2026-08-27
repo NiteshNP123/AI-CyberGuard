@@ -165,3 +165,18 @@ export const loginProfilesTable = pgTable("login_profiles", {
 export type LoginProfileRecord = typeof loginProfilesTable.$inferSelect;
 export type InsertLoginProfile = typeof loginProfilesTable.$inferInsert;
 
+// Workspace and account settings persistence
+export const settingsTable = pgTable("settings", {
+  id: text("id").primaryKey().default("default"),
+  name: text("name").notNull().default("Avery Mitchell"),
+  workspaceName: text("workspace_name").notNull().default("Northstar Studio"),
+  notificationEmail: text("notification_email").notNull().default("avery@northstar.studio"),
+  criticalAlerts: boolean("critical_alerts").notNull().default(true),
+  weeklyDigest: boolean("weekly_digest").notNull().default(false),
+  dataRetention: text("data_retention").notNull().default("30 days"),
+  scanConfirmation: boolean("scan_confirmation").notNull().default(true),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type SettingsRecord = typeof settingsTable.$inferSelect;
+export type InsertSettings = typeof settingsTable.$inferInsert;

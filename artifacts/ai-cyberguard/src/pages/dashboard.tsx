@@ -1,6 +1,6 @@
 import { ArrowDownRight, ArrowUpRight, ChevronRight, Clock3, ExternalLink, FileSearch, LockKeyhole, Radar, ShieldCheck, Siren } from 'lucide-react';
 import { Link } from 'wouter';
-import { getGetDashboardSummaryQueryKey, getGetRecentEventsQueryKey, useGetDashboardSummary, useGetRecentEvents, type DashboardSummary, type SecurityEvent } from '@workspace/api-client-react';
+import { getGetDashboardSummaryQueryKey, getGetRecentEventsQueryKey, getGetSettingsQueryKey, useGetDashboardSummary, useGetRecentEvents, useGetSettings, type DashboardSummary, type SecurityEvent } from '@workspace/api-client-react';
 import { EmptyState, MetricTooltip, PageHeader, QueryError, SeverityBadge, SkeletonBlock, formatTimestamp, scoreTone } from '@/components/ui-kit';
 
 const fallbackSummary: DashboardSummary = { securityScore: 0, threatLevel: 'LOW', critical: 0, high: 0, medium: 0, low: 0, totalScans: 0, protectedAssets: 0, scoreTrend: [], distribution: [] };
@@ -27,15 +27,30 @@ function EventRow({ event }: { event: SecurityEvent }) {
   return <div data-testid={`row-event-${event.id}`} className="group flex items-start gap-3 border-b border-border px-5 py-4 last:border-0"><div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"><Siren size={14} /></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><span className="truncate text-[12px] font-bold">{event.title}</span><SeverityBadge severity={event.severity} /></div><p className="cg-line-clamp mt-1 text-[11px] text-muted-foreground">{event.detail}</p><div className="mt-2 flex items-center gap-3 text-[9px] text-muted-foreground"><span>{event.source}</span><span className="h-1 w-1 rounded-full bg-border" /><span>{formatTimestamp(event.timestamp)}</span></div></div><div className={`cg-mono text-[11px] font-medium ${scoreTone(event.score)}`}>{event.score}</div></div>;
 }
 
+function getGreeting(firstName: string): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return `Good morning, ${firstName}.`;
+  if (hour < 17) return `Good afternoon, ${firstName}.`;
+  return `Good evening, ${firstName}.`;
+}
+
 export default function Dashboard() {
   const summaryQuery = useGetDashboardSummary({ query: { queryKey: getGetDashboardSummaryQueryKey() } });
   const eventsQuery = useGetRecentEvents({ limit: 8 }, { query: { queryKey: getGetRecentEventsQueryKey({ limit: 8 }) } });
+  const settingsQuery = useGetSettings({ query: { queryKey: getGetSettingsQueryKey() } });
+
   const summary = summaryQuery.data || fallbackSummary;
   const trend = summary.scoreTrend || [];
   const severityItems = [{ label: 'Critical', count: summary.critical, color: 'critical' }, { label: 'High', count: summary.high, color: 'high' }, { label: 'Medium', count: summary.medium, color: 'medium' }, { label: 'Low', count: summary.low, color: 'low' }];
   const delta = trend.length > 1 ? trend[trend.length - 1].value - trend[trend.length - 2].value : 0;
+
+  // Derive first name from persisted settings
+  const fullName = settingsQuery.data?.name ?? '';
+  const firstName = fullName.split(' ')[0] || fullName || 'there';
+  const greeting = getGreeting(firstName);
+
   return <div className="cg-page mx-auto max-w-[1420px]">
-    <PageHeader eyebrow="Security posture · live" title="Good morning, Avery." description="Your workspace is protected. Here is the signal that matters right now." action={<div className="flex gap-2"><Link href="/url-analyzer" data-testid="link-quick-url-analysis" className="cg-btn cg-btn-primary"><FileSearch size={14} />Scan a URL</Link><Link href="/message-analyzer" data-testid="link-quick-message-analysis" className="cg-btn cg-btn-quiet"><LockKeyhole size={14} />Inspect message</Link></div>} />
+    <PageHeader eyebrow="Security posture · live" title={greeting} description="Your workspace is protected. Here is the signal that matters right now." action={<div className="flex gap-2"><Link href="/url-analyzer" data-testid="link-quick-url-analysis" className="cg-btn cg-btn-primary"><FileSearch size={14} />Scan a URL</Link><Link href="/message-analyzer" data-testid="link-quick-message-analysis" className="cg-btn cg-btn-quiet"><LockKeyhole size={14} />Inspect message</Link></div>} />
     {summaryQuery.isError ? <QueryError onRetry={() => summaryQuery.refetch()} label="Posture data is temporarily unavailable." /> : summaryQuery.isLoading ? <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr_1fr]"><SkeletonBlock className="h-[222px]" /><SkeletonBlock className="h-[222px]" /><SkeletonBlock className="h-[222px]" /></div> : <div className="grid gap-4 lg:grid-cols-[1.25fr_1fr_1fr]">
       <section className="cg-panel cg-grid-bg relative overflow-hidden p-5 md:p-6"><div className="flex items-start justify-between"><div><div className="cg-kicker">Workspace health</div><div className="mt-2 flex items-center gap-2 text-[12px] font-bold text-primary"><span className="cg-alert-dot" />Protected and monitoring</div></div><ShieldCheck className="text-primary" size={19} /></div><div className="mt-4 flex items-center gap-6"><ScoreRing score={summary.securityScore} /><div className="space-y-3"><div><div className="flex items-center gap-1 text-[10px] text-muted-foreground">Threat level <MetricTooltip text="Highest active severity across your workspace" /></div><div data-testid="status-threat-level" className="mt-1 text-[20px] font-extrabold tracking-[-.04em]">{summary.threatLevel || 'LOW'}</div></div><div className="flex items-center gap-2 text-[10px] text-muted-foreground">{delta >= 0 ? <ArrowUpRight size={13} className="text-primary" /> : <ArrowDownRight size={13} className="text-destructive" />} {Math.abs(delta)} pts this period</div></div></div><div className="mt-4 border-t border-border pt-3 text-[10px] text-muted-foreground">Signals are weighted by recency, confidence, and impact.</div></section>
       <section className="cg-panel p-5"><div className="flex items-center justify-between"><div className="cg-kicker">Active findings</div><Link href="/alerts" data-testid="link-view-active-alerts" className="text-[10px] font-bold text-primary">View alerts <ChevronRight className="inline" size={12} /></Link></div><div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-5">{severityItems.map((item) => <div key={item.label}><div className="flex items-center gap-2 text-[10px] text-muted-foreground"><span className={`h-1.5 w-1.5 rounded-full cg-severity-${item.color}`} />{item.label}</div><div data-testid={`value-active-${item.label.toLowerCase()}`} className="cg-mono mt-1 text-[24px]">{item.count}</div></div>)}</div><div className="mt-5 border-t border-border pt-4"><div className="flex justify-between text-[10px] text-muted-foreground"><span>Total scanned</span><span className="cg-mono font-medium text-foreground">{summary.totalScans}</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(summary.totalScans ? (summary.low / summary.totalScans) * 100 : 0, 100)}%` }} /></div></div></section>

@@ -74,7 +74,7 @@ async function runEndToEndVerification() {
   console.log("\n>>> [TEST 3] REAL-TIME TELEMETRY & WEBSOCKET DISPATCH");
   const wsEvents = [];
   const ws = new WebSocketClient("ws://127.0.0.1:5000/ws");
-  
+
   await new Promise((resolve) => {
     ws.addEventListener("open", () => {
       console.log("  -> WebSocket Client connected to ws://127.0.0.1:5000/ws");
