@@ -55,7 +55,10 @@ export default function Alerts() {
   const handleBulkResolve = async () => {
     try {
       setBulkResolving(true);
-      const res = await fetch('/api/alerts/bulk-resolve', { method: 'POST' });
+      const res = await fetch('/api/alerts/bulk-resolve', {
+        method: 'POST',
+        headers: { 'X-Workspace-Token': import.meta.env.VITE_WORKSPACE_TOKEN || '' }
+      });
       const data = await res.json();
       if (res.ok) {
         toast({ title: 'Queue Resolved', description: data.message || `${data.resolved} alerts marked as RESOLVED.` });
@@ -81,7 +84,10 @@ export default function Alerts() {
       setClearing(true);
       const res = await fetch('/api/alerts', {
         method: 'DELETE',
-        headers: { 'X-Confirm-Clear': 'yes-delete-all' }
+        headers: {
+          'X-Confirm-Clear': 'yes-delete-all',
+          'X-Workspace-Token': import.meta.env.VITE_WORKSPACE_TOKEN || ''
+        }
       });
       const data = await res.json();
       if (res.ok) {

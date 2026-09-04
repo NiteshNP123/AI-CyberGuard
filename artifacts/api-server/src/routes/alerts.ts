@@ -1,8 +1,37 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { dataStore } from "../services/store";
 import { wsHub } from "../services/websocket";
 
 const router: IRouter = Router();
+
+/**
+ * Lightweight authorization middleware for destructive operations.
+ * Requires X-Workspace-Token header to match WORKSPACE_TOKEN environment variable.
+ * Fails closed if WORKSPACE_TOKEN is not configured.
+ */
+function requireWorkspaceToken(req: Request, res: Response, next: NextFunction): void {
+  const expectedToken = process.env["WORKSPACE_TOKEN"];
+
+  if (!expectedToken) {
+    res.status(503).json({
+      error: "Server misconfiguration",
+      message: "WORKSPACE_TOKEN environment variable is not set. Destructive operations are disabled."
+    });
+    return;
+  }
+
+  const providedToken = req.headers["x-workspace-token"];
+
+  if (!providedToken || providedToken !== expectedToken) {
+    res.status(401).json({
+      error: "Unauthorized",
+      message: "Valid X-Workspace-Token header required for this operation."
+    });
+    return;
+  }
+
+  next();
+}
 
 /** GET /alerts — List all security alerts (newest first). */
 router.get("/alerts", async (_req, res) => {
@@ -32,8 +61,9 @@ router.patch("/alerts/:id/status", async (req, res) => {
  * POST /alerts/bulk-resolve
  * Marks all NEW and INVESTIGATING alerts as RESOLVED.
  * Does NOT delete them — they remain in the history.
+ * Requires valid X-Workspace-Token header for authorization.
  */
-router.post("/alerts/bulk-resolve", async (_req, res) => {
+router.post("/alerts/bulk-resolve", requireWorkspaceToken, async (_req, res) => {
   try {
     const count = await dataStore.bulkResolveAlerts();
     wsHub.broadcast("ALERTS_BULK_RESOLVED", { count });
@@ -46,9 +76,10 @@ router.post("/alerts/bulk-resolve", async (_req, res) => {
 /**
  * DELETE /alerts
  * Permanently deletes ALL alerts from the database.
- * Requires confirmation header: X-Confirm-Clear: "yes-delete-all"
+ * Requires valid X-Workspace-Token header for authorization.
+ * Additionally requires X-Confirm-Clear: "yes-delete-all" as defense-in-depth.
  */
-router.delete("/alerts", async (req, res) => {
+router.delete("/alerts", requireWorkspaceToken, async (req, res) => {
   const confirm = req.headers["x-confirm-clear"];
   if (confirm !== "yes-delete-all") {
     return res.status(400).json({

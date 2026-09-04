@@ -108,11 +108,27 @@ python -m uvicorn main:app --app-dir services/ml-engine --port 8000 --host 127.0
 # Build packages
 pnpm run build
 
+# Set workspace token for destructive operations (required)
+export WORKSPACE_TOKEN="your-secure-token-here"
+
 # Start server
 node artifacts/api-server/dist/index.mjs
 ```
 
-### 6. Run Integration Tests
+### 6. Configure Frontend for Destructive Operations (Optional)
+If you need to use the "Clear all alerts" or "Bulk resolve" features from the frontend, set the matching token as a Vite environment variable:
+
+```bash
+# For frontend destructive operations (must match WORKSPACE_TOKEN)
+export VITE_WORKSPACE_TOKEN="your-secure-token-here"
+
+# Then start the frontend dev server
+pnpm run dev
+```
+
+**Note:** The token must match exactly between `WORKSPACE_TOKEN` (server) and `VITE_WORKSPACE_TOKEN` (frontend). If the frontend token is missing or incorrect, destructive operations will fail with a 401 Unauthorized error.
+
+### 7. Run Integration Tests
 ```bash
 node scripts/test-integration.mjs
 ```
