@@ -70,6 +70,8 @@ class DataStoreService {
     settings: { ...DEFAULT_SETTINGS }
   };
 
+  private writeQueue: Promise<void> = Promise.resolve();
+
   constructor() {
     this.initLocalStore();
   }
@@ -81,23 +83,34 @@ class DataStoreService {
       }
       if (fs.existsSync(DATA_FILE)) {
         const raw = fs.readFileSync(DATA_FILE, "utf-8");
-        const loaded = JSON.parse(raw);
-        // Merge with defaults so new fields (e.g. loginProfiles, settings) are never undefined
-        this.localState = {
-          events: loaded.events ?? [],
-          alerts: loaded.alerts ?? [],
-          incidents: loaded.incidents ?? [],
-          urlScans: loaded.urlScans ?? [],
-          messageScans: loaded.messageScans ?? [],
-          networkEvents: loaded.networkEvents ?? [],
-          dnsEvents: loaded.dnsEvents ?? [],
-          loginEvents: loaded.loginEvents ?? [],
-          fileScans: loaded.fileScans ?? [],
-          loginProfiles: loaded.loginProfiles ?? {},
-          settings: loaded.settings
-            ? { ...DEFAULT_SETTINGS, ...loaded.settings, updatedAt: new Date(loaded.settings.updatedAt || Date.now()) }
-            : { ...DEFAULT_SETTINGS }
-        };
+        try {
+          const loaded = JSON.parse(raw);
+          // Merge with defaults so new fields (e.g. loginProfiles, settings) are never undefined
+          this.localState = {
+            events: loaded.events ?? [],
+            alerts: loaded.alerts ?? [],
+            incidents: loaded.incidents ?? [],
+            urlScans: loaded.urlScans ?? [],
+            messageScans: loaded.messageScans ?? [],
+            networkEvents: loaded.networkEvents ?? [],
+            dnsEvents: loaded.dnsEvents ?? [],
+            loginEvents: loaded.loginEvents ?? [],
+            fileScans: loaded.fileScans ?? [],
+            loginProfiles: loaded.loginProfiles ?? {},
+            settings: loaded.settings
+              ? { ...DEFAULT_SETTINGS, ...loaded.settings, updatedAt: new Date(loaded.settings.updatedAt || Date.now()) }
+              : { ...DEFAULT_SETTINGS }
+          };
+        } catch (parseErr) {
+          // Preserve the corrupted file for manual recovery; fall back to defaults in memory
+          const backup = `${DATA_FILE}.corrupted.${Date.now()}`;
+          try {
+            fs.renameSync(DATA_FILE, backup);
+            console.error(`Local store JSON was invalid; preserved as ${backup}. Starting with defaults.`, parseErr);
+          } catch (renameErr) {
+            console.error("Local store JSON was invalid and could not be backed up; starting with defaults.", parseErr, renameErr);
+          }
+        }
       } else {
         this.persistLocalStore();
       }
@@ -107,38 +120,50 @@ class DataStoreService {
   }
 
   private persistLocalStore() {
+    const tmp = `${DATA_FILE}.tmp.${process.pid}.${Date.now()}`;
     try {
-      fs.writeFileSync(DATA_FILE, JSON.stringify(this.localState, null, 2), "utf-8");
+      const content = JSON.stringify(this.localState, null, 2);
+      fs.writeFileSync(tmp, content, "utf-8");
+      fs.renameSync(tmp, DATA_FILE);
     } catch (err) {
       console.error("Error persisting local store:", err);
+      if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
     }
+  }
+
+  private async serialize<T>(fn: () => T | Promise<T>): Promise<T> {
+    const run = this.writeQueue.then(() => fn());
+    this.writeQueue = run.then(() => undefined, () => undefined);
+    return run;
   }
 
   // Security Events
   async insertSecurityEvent(event: Omit<SecurityEventRecord, "timestamp"> & { timestamp?: Date }): Promise<SecurityEventRecord> {
-    const record: SecurityEventRecord = {
-      id: event.id || `evt-${randomUUID().slice(0, 8)}`,
-      type: event.type,
-      title: event.title,
-      detail: event.detail,
-      severity: event.severity,
-      score: event.score,
-      source: event.source,
-      metadata: event.metadata || null,
-      timestamp: event.timestamp || new Date()
-    };
+    return this.serialize(async () => {
+      const record: SecurityEventRecord = {
+        id: event.id || `evt-${randomUUID().slice(0, 8)}`,
+        type: event.type,
+        title: event.title,
+        detail: event.detail,
+        severity: event.severity,
+        score: event.score,
+        source: event.source,
+        metadata: event.metadata || null,
+        timestamp: event.timestamp || new Date()
+      };
 
-    if (db) {
-      try {
-        await db.insert(securityEventsTable).values(record);
-      } catch (err) {
-        console.warn("DB insert error, falling back to store:", err);
+      if (db) {
+        try {
+          await db.insert(securityEventsTable).values(record);
+        } catch (err) {
+          console.warn("DB insert error, falling back to store:", err);
+        }
       }
-    }
 
-    this.localState.events.unshift(record);
-    this.persistLocalStore();
-    return record;
+      this.localState.events.unshift(record);
+      this.persistLocalStore();
+      return record;
+    });
   }
 
   async getRecentEvents(limit: number = 20): Promise<SecurityEventRecord[]> {
@@ -155,30 +180,32 @@ class DataStoreService {
 
   // Alerts
   async insertAlert(alert: Omit<AlertRecord, "timestamp" | "status" | "incidentId" | "evidence"> & { timestamp?: Date; status?: "NEW" | "INVESTIGATING" | "RESOLVED" | "FALSE_POSITIVE"; incidentId?: string | null; evidence?: string | null }): Promise<AlertRecord> {
-    const record: AlertRecord = {
-      id: alert.id || `ALT-${randomUUID().slice(0, 8).toUpperCase()}`,
-      title: alert.title,
-      source: alert.source,
-      severity: alert.severity,
-      score: alert.score,
-      status: alert.status || "NEW",
-      description: alert.description,
-      evidence: alert.evidence || null,
-      incidentId: alert.incidentId || null,
-      timestamp: alert.timestamp || new Date()
-    };
+    return this.serialize(async () => {
+      const record: AlertRecord = {
+        id: alert.id || `ALT-${randomUUID().slice(0, 8).toUpperCase()}`,
+        title: alert.title,
+        source: alert.source,
+        severity: alert.severity,
+        score: alert.score,
+        status: alert.status || "NEW",
+        description: alert.description,
+        evidence: alert.evidence || null,
+        incidentId: alert.incidentId || null,
+        timestamp: alert.timestamp || new Date()
+      };
 
-    if (db) {
-      try {
-        await db.insert(alertsTable).values(record);
-      } catch (err) {
-        console.warn("DB insert alert error:", err);
+      if (db) {
+        try {
+          await db.insert(alertsTable).values(record);
+        } catch (err) {
+          console.warn("DB insert alert error:", err);
+        }
       }
-    }
 
-    this.localState.alerts.unshift(record);
-    this.persistLocalStore();
-    return record;
+      this.localState.alerts.unshift(record);
+      this.persistLocalStore();
+      return record;
+    });
   }
 
   async getAlerts(): Promise<AlertRecord[]> {
@@ -194,99 +221,107 @@ class DataStoreService {
   }
 
   async updateAlertStatus(id: string, status: "NEW" | "INVESTIGATING" | "RESOLVED" | "FALSE_POSITIVE"): Promise<AlertRecord | null> {
-    if (db) {
-      try {
-        await db.update(alertsTable).set({ status }).where(eq(alertsTable.id, id));
-      } catch (err) {
-        console.warn("DB update alert error:", err);
+    return this.serialize(async () => {
+      if (db) {
+        try {
+          await db.update(alertsTable).set({ status }).where(eq(alertsTable.id, id));
+        } catch (err) {
+          console.warn("DB update alert error:", err);
+        }
       }
-    }
 
-    const item = this.localState.alerts.find((a) => a.id === id);
-    if (item) {
-      item.status = status;
-      this.persistLocalStore();
-      return item;
-    }
-    return null;
+      const item = this.localState.alerts.find((a) => a.id === id);
+      if (item) {
+        item.status = status;
+        this.persistLocalStore();
+        return item;
+      }
+      return null;
+    });
   }
 
   /** Marks all active (NEW / INVESTIGATING) alerts as RESOLVED in DB and local state. */
   async bulkResolveAlerts(): Promise<number> {
-    const activeStatuses: Array<"NEW" | "INVESTIGATING"> = ["NEW", "INVESTIGATING"];
-    let count = 0;
-    if (db) {
-      try {
-        // Resolve in DB one by one (compatible with Drizzle's type-safe where)
-        for (const status of activeStatuses) {
-          const rows = await db.select({ id: alertsTable.id }).from(alertsTable).where(eq(alertsTable.status, status));
-          for (const row of rows) {
-            await db.update(alertsTable).set({ status: "RESOLVED" }).where(eq(alertsTable.id, row.id));
-            count++;
+    return this.serialize(async () => {
+      const activeStatuses: Array<"NEW" | "INVESTIGATING"> = ["NEW", "INVESTIGATING"];
+      let count = 0;
+      if (db) {
+        try {
+          // Resolve in DB one by one (compatible with Drizzle's type-safe where)
+          for (const status of activeStatuses) {
+            const rows = await db.select({ id: alertsTable.id }).from(alertsTable).where(eq(alertsTable.status, status));
+            for (const row of rows) {
+              await db.update(alertsTable).set({ status: "RESOLVED" }).where(eq(alertsTable.id, row.id));
+              count++;
+            }
           }
+        } catch (err) {
+          console.warn("DB bulkResolveAlerts error:", err);
         }
-      } catch (err) {
-        console.warn("DB bulkResolveAlerts error:", err);
       }
-    }
-    // Update local state
-    for (const alert of this.localState.alerts) {
-      if (alert.status === "NEW" || alert.status === "INVESTIGATING") {
-        alert.status = "RESOLVED";
-        count++;
+      // Update local state
+      for (const alert of this.localState.alerts) {
+        if (alert.status === "NEW" || alert.status === "INVESTIGATING") {
+          alert.status = "RESOLVED";
+          count++;
+        }
       }
-    }
-    this.persistLocalStore();
-    return count;
+      this.persistLocalStore();
+      return count;
+    });
   }
 
   /** Permanently deletes ALL alerts from DB and local state. */
   async clearAllAlerts(): Promise<number> {
-    let count = 0;
-    if (db) {
-      try {
-        const rows = await db.select({ id: alertsTable.id }).from(alertsTable);
-        count = rows.length;
-        // Delete in batch
-        for (const row of rows) {
-          await db.delete(alertsTable).where(eq(alertsTable.id, row.id));
+    return this.serialize(async () => {
+      let count = 0;
+      if (db) {
+        try {
+          const rows = await db.select({ id: alertsTable.id }).from(alertsTable);
+          count = rows.length;
+          // Delete in batch
+          for (const row of rows) {
+            await db.delete(alertsTable).where(eq(alertsTable.id, row.id));
+          }
+        } catch (err) {
+          console.warn("DB clearAllAlerts error:", err);
         }
-      } catch (err) {
-        console.warn("DB clearAllAlerts error:", err);
+      } else {
+        count = this.localState.alerts.length;
       }
-    } else {
-      count = this.localState.alerts.length;
-    }
-    this.localState.alerts = [];
-    this.persistLocalStore();
-    return count;
+      this.localState.alerts = [];
+      this.persistLocalStore();
+      return count;
+    });
   }
 
   // Incidents
   async insertIncident(inc: Omit<IncidentRecord, "createdAt" | "updatedAt" | "status" | "correlatedEventsCount"> & { status?: "OPEN" | "INVESTIGATING" | "CONTAINED" | "RESOLVED"; correlatedEventsCount?: number }): Promise<IncidentRecord> {
-    const record: IncidentRecord = {
-      id: inc.id || `INC-${randomUUID().slice(0, 8).toUpperCase()}`,
-      title: inc.title,
-      severity: inc.severity,
-      status: inc.status || "OPEN",
-      correlatedEventsCount: inc.correlatedEventsCount || 1,
-      summary: inc.summary,
-      timeline: inc.timeline,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+    return this.serialize(async () => {
+      const record: IncidentRecord = {
+        id: inc.id || `INC-${randomUUID().slice(0, 8).toUpperCase()}`,
+        title: inc.title,
+        severity: inc.severity,
+        status: inc.status || "OPEN",
+        correlatedEventsCount: inc.correlatedEventsCount || 1,
+        summary: inc.summary,
+        timeline: inc.timeline,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-    if (db) {
-      try {
-        await db.insert(incidentsTable).values(record);
-      } catch (err) {
-        console.warn("DB insert incident error:", err);
+      if (db) {
+        try {
+          await db.insert(incidentsTable).values(record);
+        } catch (err) {
+          console.warn("DB insert incident error:", err);
+        }
       }
-    }
 
-    this.localState.incidents.unshift(record);
-    this.persistLocalStore();
-    return record;
+      this.localState.incidents.unshift(record);
+      this.persistLocalStore();
+      return record;
+    });
   }
 
   async getIncidents(): Promise<IncidentRecord[]> {
@@ -303,56 +338,62 @@ class DataStoreService {
 
   // URL Scans
   async insertUrlScan(scan: Omit<UrlScanRecord, "analyzedAt">): Promise<UrlScanRecord> {
-    const record: UrlScanRecord = {
-      ...scan,
-      analyzedAt: new Date()
-    };
-    if (db) {
-      try {
-        await db.insert(urlScansTable).values(record);
-      } catch (err) {
-        console.warn("DB insert url scan error:", err);
+    return this.serialize(async () => {
+      const record: UrlScanRecord = {
+        ...scan,
+        analyzedAt: new Date()
+      };
+      if (db) {
+        try {
+          await db.insert(urlScansTable).values(record);
+        } catch (err) {
+          console.warn("DB insert url scan error:", err);
+        }
       }
-    }
-    this.localState.urlScans.unshift(record);
-    this.persistLocalStore();
-    return record;
+      this.localState.urlScans.unshift(record);
+      this.persistLocalStore();
+      return record;
+    });
   }
 
   // Message Scans
   async insertMessageScan(scan: Omit<MessageScanRecord, "analyzedAt">): Promise<MessageScanRecord> {
-    const record: MessageScanRecord = {
-      ...scan,
-      analyzedAt: new Date()
-    };
-    if (db) {
-      try {
-        await db.insert(messageScansTable).values(record);
-      } catch (err) {
-        console.warn("DB insert message scan error:", err);
+    return this.serialize(async () => {
+      const record: MessageScanRecord = {
+        ...scan,
+        analyzedAt: new Date()
+      };
+      if (db) {
+        try {
+          await db.insert(messageScansTable).values(record);
+        } catch (err) {
+          console.warn("DB insert message scan error:", err);
+        }
       }
-    }
-    this.localState.messageScans.unshift(record);
-    this.persistLocalStore();
-    return record;
+      this.localState.messageScans.unshift(record);
+      this.persistLocalStore();
+      return record;
+    });
   }
 
   // Network Events
   async insertNetworkEvent(evt: Omit<NetworkEventRecord, "timestamp">): Promise<NetworkEventRecord> {
-    const record: NetworkEventRecord = {
-      ...evt,
-      timestamp: new Date()
-    };
-    if (db) {
-      try {
-        await db.insert(networkEventsTable).values(record);
-      } catch (err) {
-        console.warn("DB insert network event error:", err);
+    return this.serialize(async () => {
+      const record: NetworkEventRecord = {
+        ...evt,
+        timestamp: new Date()
+      };
+      if (db) {
+        try {
+          await db.insert(networkEventsTable).values(record);
+        } catch (err) {
+          console.warn("DB insert network event error:", err);
+        }
       }
-    }
-    this.localState.networkEvents.unshift(record);
-    this.persistLocalStore();
-    return record;
+      this.localState.networkEvents.unshift(record);
+      this.persistLocalStore();
+      return record;
+    });
   }
 
   // Dashboard Aggregations (Computed directly from real database / store records)
@@ -457,46 +498,48 @@ class DataStoreService {
     username: string,
     data: { knownIps: string[]; knownUserAgents: string[]; failedAttempts: number; lastLoginAt: Date }
   ): Promise<void> {
-    const knownIpsJson = JSON.stringify(data.knownIps);
-    const knownUasJson = JSON.stringify(data.knownUserAgents);
-    const now = new Date();
+    return this.serialize(async () => {
+      const knownIpsJson = JSON.stringify(data.knownIps);
+      const knownUasJson = JSON.stringify(data.knownUserAgents);
+      const now = new Date();
 
-    // PostgreSQL upsert (INSERT … ON CONFLICT DO UPDATE)
-    if (db) {
-      try {
-        await db
-          .insert(loginProfilesTable)
-          .values({
-            username,
-            knownIps: knownIpsJson,
-            knownUserAgents: knownUasJson,
-            failedAttempts: data.failedAttempts,
-            lastLoginAt: data.lastLoginAt.toISOString() as unknown as Date,
-            updatedAt: now.toISOString() as unknown as Date
-          })
-          .onConflictDoUpdate({
-            target: loginProfilesTable.username,
-            set: {
+      // PostgreSQL upsert (INSERT … ON CONFLICT DO UPDATE)
+      if (db) {
+        try {
+          await db
+            .insert(loginProfilesTable)
+            .values({
+              username,
               knownIps: knownIpsJson,
               knownUserAgents: knownUasJson,
               failedAttempts: data.failedAttempts,
               lastLoginAt: data.lastLoginAt.toISOString() as unknown as Date,
               updatedAt: now.toISOString() as unknown as Date
-            }
-          });
-      } catch (err) {
-        console.warn("DB upsertLoginProfile error:", err);
+            })
+            .onConflictDoUpdate({
+              target: loginProfilesTable.username,
+              set: {
+                knownIps: knownIpsJson,
+                knownUserAgents: knownUasJson,
+                failedAttempts: data.failedAttempts,
+                lastLoginAt: data.lastLoginAt.toISOString() as unknown as Date,
+                updatedAt: now.toISOString() as unknown as Date
+              }
+            });
+        } catch (err) {
+          console.warn("DB upsertLoginProfile error:", err);
+        }
       }
-    }
 
-    // Always update local file store as well (fallback persistence)
-    this.localState.loginProfiles[username] = {
-      knownIps: data.knownIps,
-      knownUserAgents: data.knownUserAgents,
-      failedAttempts: data.failedAttempts,
-      lastLoginAt: data.lastLoginAt.toISOString()
-    };
-    this.persistLocalStore();
+      // Always update local file store as well (fallback persistence)
+      this.localState.loginProfiles[username] = {
+        knownIps: data.knownIps,
+        knownUserAgents: data.knownUserAgents,
+        failedAttempts: data.failedAttempts,
+        lastLoginAt: data.lastLoginAt.toISOString()
+      };
+      this.persistLocalStore();
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -527,33 +570,22 @@ class DataStoreService {
 
   /** Updates and persists the workspace and account settings. */
   async updateSettings(updates: Partial<Omit<SettingsRecord, "id" | "updatedAt">>): Promise<SettingsRecord> {
-    const now = new Date();
-    const current = await this.getSettings();
-    const updated: SettingsRecord = {
-      ...current,
-      ...updates,
-      id: "default",
-      updatedAt: now
-    };
+    return this.serialize(async () => {
+      const now = new Date();
+      const current = await this.getSettings();
+      const updated: SettingsRecord = {
+        ...current,
+        ...updates,
+        id: "default",
+        updatedAt: now
+      };
 
-    if (db) {
-      try {
-        await db
-          .insert(settingsTable)
-          .values({
-            id: "default",
-            name: updated.name,
-            workspaceName: updated.workspaceName,
-            notificationEmail: updated.notificationEmail,
-            criticalAlerts: updated.criticalAlerts,
-            weeklyDigest: updated.weeklyDigest,
-            dataRetention: updated.dataRetention,
-            scanConfirmation: updated.scanConfirmation,
-            updatedAt: now as any
-          })
-          .onConflictDoUpdate({
-            target: settingsTable.id,
-            set: {
+      if (db) {
+        try {
+          await db
+            .insert(settingsTable)
+            .values({
+              id: "default",
               name: updated.name,
               workspaceName: updated.workspaceName,
               notificationEmail: updated.notificationEmail,
@@ -562,16 +594,29 @@ class DataStoreService {
               dataRetention: updated.dataRetention,
               scanConfirmation: updated.scanConfirmation,
               updatedAt: now as any
-            }
-          });
-      } catch (err) {
-        console.warn("DB updateSettings error:", err);
+            })
+            .onConflictDoUpdate({
+              target: settingsTable.id,
+              set: {
+                name: updated.name,
+                workspaceName: updated.workspaceName,
+                notificationEmail: updated.notificationEmail,
+                criticalAlerts: updated.criticalAlerts,
+                weeklyDigest: updated.weeklyDigest,
+                dataRetention: updated.dataRetention,
+                scanConfirmation: updated.scanConfirmation,
+                updatedAt: now as any
+              }
+            });
+        } catch (err) {
+          console.warn("DB updateSettings error:", err);
+        }
       }
-    }
 
-    this.localState.settings = updated;
-    this.persistLocalStore();
-    return updated;
+      this.localState.settings = updated;
+      this.persistLocalStore();
+      return updated;
+    });
   }
 }
 
