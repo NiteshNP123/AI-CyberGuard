@@ -19,7 +19,7 @@ router.get("/healthz", async (_req, res) => {
     timestamp: new Date().toISOString(),
     components: {
       backend: { status: "healthy", version: "1.0.0" },
-      database: { status: "healthy", mode: "postgresql", provider: dbProvider },
+      database: { status: "healthy", mode: dbMode, provider: dbProvider },
       mlEngine: mlHealth,
       networkIds: { status: "active", mode: "flow_telemetry_ready" },
       networkSensor: {

@@ -80,7 +80,7 @@
 - **Node.js**: v20+ (Node 24 recommended)
 - **pnpm**: v9+ / v11+
 - **Python**: 3.10+
-- **PostgreSQL** *(Optional, automatically uses local persistent store if `DATABASE_URL` is omitted)*
+- **PostgreSQL** *(Optional — see "Persistence Modes" below. When `DATABASE_URL` is set, PostgreSQL is the source of truth; when omitted, the local JSON file store is the source of truth. The two modes are alternatives, not dual-write stores.)*
 
 ### 2. Install Dependencies
 ```bash
@@ -137,6 +137,21 @@ node scripts/test-integration.mjs
 ```bash
 python scripts/wifi-companion.py
 ```
+
+---
+
+## 💾 Persistence Modes
+
+Mode is picked at startup by `DATABASE_URL`: PostgreSQL when set, local JSON when not. No dual-write.
+
+| Mode | Trigger | Source of truth | Useful when |
+|---|---|---|---|
+| **PostgreSQL** | `DATABASE_URL` is set | PostgreSQL via Drizzle | Production / multi-instance / shared persistence |
+| **Local JSON** | `DATABASE_URL` is **not** set | `artifacts/api-server/.data/cyberguard_store.json` | Local dev, single-instance demo, no-DB setup |
+
+The `GET /api/healthz` endpoint reports the active mode under `components.database.mode` (`postgresql` or `local_persistent_mode`) and `components.database.provider` (`PostgreSQL 17` or `JSON file store`).
+
+> In DB mode the JSON file is neither read nor written; any pre-existing file is harmless.
 
 ---
 
