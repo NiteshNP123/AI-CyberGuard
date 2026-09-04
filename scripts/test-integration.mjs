@@ -76,7 +76,10 @@ async function runTests() {
   console.log('\n=== 8. Testing Login Anomaly Profiler ===');
   const authRes = await (await fetch('http://127.0.0.1:5000/api/auth/event', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Workspace-Token': process.env.WORKSPACE_TOKEN || 'dev-token'
+    },
     body: JSON.stringify({ username: 'avery', ipAddress: '203.0.113.88', userAgent: 'TorBrowser/13.0', status: 'SUCCESS' })
   })).json();
   console.log('Login Anomaly Flag:', authRes.isAnomaly, '| Reason:', authRes.anomalyReason, '| Risk:', authRes.riskScore);

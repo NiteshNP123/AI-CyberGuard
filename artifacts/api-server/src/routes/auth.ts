@@ -3,6 +3,7 @@ import { Router, type IRouter } from "express";
 import { dataStore } from "../services/store";
 import { wsHub } from "../services/websocket";
 import { ThreatCorrelationEngine } from "../services/correlation";
+import { requireWorkspaceToken } from "../lib/auth";
 
 const router: IRouter = Router();
 
@@ -21,7 +22,7 @@ const sessionCache: Record<
   { knownIps: Set<string>; knownUserAgents: Set<string>; failedAttempts: number; lastLoginAt: number }
 > = {};
 
-router.post("/auth/event", async (req, res) => {
+router.post("/auth/event", requireWorkspaceToken, async (req, res) => {
   const { username, ipAddress, userAgent, status = "SUCCESS" } = req.body || {};
   if (!username || !ipAddress) {
     return res.status(400).json({ error: "username and ipAddress are required" });
