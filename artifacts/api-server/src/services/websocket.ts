@@ -8,6 +8,16 @@ export interface SocketMessage {
   timestamp: string;
 }
 
+const ALLOWED_ORIGINS = new Set([
+  "http://127.0.0.1:5173",
+  "http://localhost:5173",
+  "http://127.0.0.1:5000",
+  "http://localhost:5000"
+]);
+if (process.env.DASHBOARD_ORIGIN) {
+  ALLOWED_ORIGINS.add(process.env.DASHBOARD_ORIGIN);
+}
+
 
 class WebSocketHub {
   private wss: WebSocketServer | null = null;
@@ -17,6 +27,15 @@ class WebSocketHub {
     this.wss = new WebSocketServer({ server, path: "/ws" });
 
     this.wss.on("connection", (ws, req) => {
+      const origin = req.headers.origin;
+      // Browser-sourced connections must have an allowed Origin. Non-browser/local
+      // clients (no Origin header) are allowed for compatibility.
+      if (origin && !ALLOWED_ORIGINS.has(origin)) {
+        logger.warn({ origin, remoteAddress: req.socket.remoteAddress }, "Rejected WebSocket connection: disallowed Origin");
+        ws.close(1008, "Origin not allowed");
+        return;
+      }
+
       this.clients.add(ws);
       logger.info({ remoteAddress: req.socket.remoteAddress, totalClients: this.clients.size }, "WebSocket client connected");
 

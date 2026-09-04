@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { dataStore } from "../services/store";
 import { wsHub } from "../services/websocket";
 import { requireWorkspaceToken } from "../lib/auth";
+import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
@@ -40,8 +41,9 @@ router.post("/alerts/bulk-resolve", requireWorkspaceToken, async (_req, res) => 
     const count = await dataStore.bulkResolveAlerts();
     wsHub.broadcast("ALERTS_BULK_RESOLVED", { count });
     return res.json({ success: true, resolved: count, message: `${count} alert(s) marked as RESOLVED.` });
-  } catch (err: any) {
-    return res.status(500).json({ error: "Bulk resolve failed", details: err?.message });
+  } catch (err) {
+    logger.error({ err }, "Bulk resolve failed");
+    return res.status(500).json({ error: "Bulk resolve failed" });
   }
 });
 
@@ -63,8 +65,9 @@ router.delete("/alerts", requireWorkspaceToken, async (req, res) => {
     const count = await dataStore.clearAllAlerts();
     wsHub.broadcast("ALERTS_CLEARED", { count });
     return res.json({ success: true, deleted: count, message: `${count} alert(s) permanently deleted.` });
-  } catch (err: any) {
-    return res.status(500).json({ error: "Clear alerts failed", details: err?.message });
+  } catch (err) {
+    logger.error({ err }, "Clear alerts failed");
+    return res.status(500).json({ error: "Clear alerts failed" });
   }
 });
 
