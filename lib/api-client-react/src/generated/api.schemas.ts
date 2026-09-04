@@ -52,7 +52,6 @@ export interface DashboardSummary {
   medium: number;
   low: number;
   totalScans: number;
-  protectedAssets: number;
   scoreTrend: TrendPoint[];
   distribution: DistributionPoint[];
 }

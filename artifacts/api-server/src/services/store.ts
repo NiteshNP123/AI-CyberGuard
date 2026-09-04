@@ -373,17 +373,8 @@ class DataStoreService {
       { label: "Critical", value: criticalAlerts, color: "#ef5b68" },
       { label: "High", value: highAlerts, color: "#f39a4a" },
       { label: "Medium", value: mediumAlerts, color: "#e6c354" },
-      { label: "Low", value: Math.max(lowAlerts, totalScans ? Math.max(1, totalScans - criticalAlerts - highAlerts - mediumAlerts) : 0), color: "#49c59a" },
+      { label: "Low", value: lowAlerts, color: "#49c59a" },
     ];
-
-    const days = ["18 Aug", "19 Aug", "20 Aug", "21 Aug", "22 Aug", "23 Aug", "24 Aug"];
-    const scoreTrend = days.map((label, idx) => {
-      const dayFactor = (idx - 6) * 1.5;
-      return {
-        label,
-        value: Math.min(100, Math.max(20, Math.round(securityScore + dayFactor)))
-      };
-    });
 
     return {
       securityScore,
@@ -391,10 +382,9 @@ class DataStoreService {
       critical: criticalAlerts,
       high: highAlerts,
       medium: mediumAlerts,
-      low: Math.max(lowAlerts, totalScans ? Math.max(1, totalScans - criticalAlerts - highAlerts - mediumAlerts) : 0),
+      low: lowAlerts,
       totalScans,
-      protectedAssets: Math.max(1, Math.min(50, 12 + Math.floor(totalScans / 3))),
-      scoreTrend,
+      scoreTrend: [],
       distribution
     };
   }

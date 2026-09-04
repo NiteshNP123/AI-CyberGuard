@@ -74,7 +74,6 @@ export const GetDashboardSummaryResponse = zod.object({
   "medium": zod.number(),
   "low": zod.number(),
   "totalScans": zod.number(),
-  "protectedAssets": zod.number(),
   "scoreTrend": zod.array(zod.object({
   "label": zod.string(),
   "value": zod.number()

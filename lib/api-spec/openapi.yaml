@@ -165,7 +165,6 @@ components:
         medium: { type: number }
         low: { type: number }
         totalScans: { type: number }
-        protectedAssets: { type: number }
         scoreTrend:
           type: array
           items:
@@ -174,7 +173,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/DistributionPoint"
-      required: [securityScore, threatLevel, critical, high, medium, low, totalScans, protectedAssets, scoreTrend, distribution]
+      required: [securityScore, threatLevel, critical, high, medium, low, totalScans, scoreTrend, distribution]
     TrendPoint:
       type: object
       properties:
