@@ -1,0 +1,244 @@
+{
+  "model_type": "RandomForestClassifier (CalibratedClassifierCV, sigmoid)",
+  "run_id": "exp_20261025_cicids2017_ablation_dos_hulk",
+  "created_at_utc": "2026-10-25T11:15:03.045792+00:00",
+  "completed_at_utc": "2026-10-25T11:15:26.670983+00:00",
+  "git_revision": "da9eb85a7e3bc7148a5becd3475b70d2e6662018",
+  "dataset": "DistriNet Corrected CIC-IDS2017 (WTMC 2021)",
+  "dataset_archive_sha256": "4D535DA19795D85376AE1397D161329E3B06FC47D9A5A68CD9BE2CD7ECEE0F2A",
+  "split_manifest_sha256": "0CE3B919E910C8905167EAA270121A6027AEA534EF130AEBFF50812EF9771349",
+  "features": [
+    "flow_duration_ms",
+    "total_fwd_packets",
+    "total_bwd_packets",
+    "total_fwd_bytes",
+    "total_bwd_bytes",
+    "byte_rate",
+    "packet_rate",
+    "syn_flag_count",
+    "fin_flag_count",
+    "rst_flag_count",
+    "ack_flag_count",
+    "psh_flag_count",
+    "urg_flag_count",
+    "dst_port_standard",
+    "dst_port_ephemeral"
+  ],
+  "classes": [
+    "NORMAL",
+    "PORT_SCAN",
+    "DOS_DDOS",
+    "BRUTE_FORCE",
+    "BOTNET_ANOMALY"
+  ],
+  "class_to_code": {
+    "NORMAL": 0,
+    "PORT_SCAN": 1,
+    "DOS_DDOS": 2,
+    "BRUTE_FORCE": 3,
+    "BOTNET_ANOMALY": 4
+  },
+  "code_to_class": {
+    "0": "NORMAL",
+    "1": "PORT_SCAN",
+    "2": "DOS_DDOS",
+    "3": "BRUTE_FORCE",
+    "4": "BOTNET_ANOMALY"
+  },
+  "sample_counts": {
+    "train": 52388,
+    "val": 9395,
+    "test": 9668,
+    "total": 71451
+  },
+  "hyperparameters": {
+    "n_estimators": 150,
+    "max_depth": 16,
+    "class_weight": "balanced",
+    "random_state": 42,
+    "calibration_cv": "StratifiedGroupKFold(n_splits=5)",
+    "calibration_method": "sigmoid"
+  },
+  "validation_metrics": {
+    "sample_count": 9395,
+    "accuracy": 0.9967003725385843,
+    "balanced_accuracy": 0.9568063597026452,
+    "macro_precision": 0.9966829401788324,
+    "macro_recall": 0.9568063597026452,
+    "macro_f1": 0.9743930800640548,
+    "weighted_precision": 0.9966888654994789,
+    "weighted_recall": 0.9967003725385843,
+    "weighted_f1": 0.9965332619012525,
+    "normal_fpr": 0.000390015600624025,
+    "brier_score": 0.006577321229735943,
+    "ece": 0.002524969659973382,
+    "per_class": {
+      "NORMAL": {
+        "class_code": 0,
+        "precision": 0.9943743937924345,
+        "recall": 0.999609984399376,
+        "f1_score": 0.9969853155693864,
+        "support": 5128
+      },
+      "PORT_SCAN": {
+        "class_code": 1,
+        "precision": 0.99,
+        "recall": 0.7857142857142857,
+        "f1_score": 0.8761061946902655,
+        "support": 126
+      },
+      "DOS_DDOS": {
+        "class_code": 2,
+        "precision": 1.0,
+        "recall": 0.9996672212978369,
+        "f1_score": 0.999833582958895,
+        "support": 3005
+      },
+      "BRUTE_FORCE": {
+        "class_code": 3,
+        "precision": 0.9990403071017274,
+        "recall": 0.9990403071017274,
+        "f1_score": 0.9990403071017274,
+        "support": 1042
+      },
+      "BOTNET_ANOMALY": {
+        "class_code": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 94
+      }
+    },
+    "confusion_matrix": [
+      [
+        5126,
+        1,
+        0,
+        1,
+        0
+      ],
+      [
+        27,
+        99,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        3004,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        1041,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        94
+      ]
+    ]
+  },
+  "holdout_test_metrics": {
+    "sample_count": 9668,
+    "accuracy": 0.9959660736450144,
+    "balanced_accuracy": 0.9423061320018725,
+    "macro_precision": 0.9983674462075545,
+    "macro_recall": 0.9423061320018725,
+    "macro_f1": 0.9656235798421882,
+    "weighted_precision": 0.995982845785725,
+    "weighted_recall": 0.9959660736450144,
+    "weighted_f1": 0.9957223423048615,
+    "normal_fpr": 0.001282051282051282,
+    "brier_score": 0.007393492448304238,
+    "ece": 0.0029486620964256985,
+    "per_class": {
+      "NORMAL": {
+        "class_code": 0,
+        "precision": 0.9941659070191431,
+        "recall": 0.9987179487179487,
+        "f1_score": 0.9964367291000457,
+        "support": 5460
+      },
+      "PORT_SCAN": {
+        "class_code": 1,
+        "precision": 1.0,
+        "recall": 0.7156862745098039,
+        "f1_score": 0.8342857142857143,
+        "support": 102
+      },
+      "DOS_DDOS": {
+        "class_code": 2,
+        "precision": 0.9976713240186295,
+        "recall": 1.0,
+        "f1_score": 0.998834304746045,
+        "support": 2999
+      },
+      "BRUTE_FORCE": {
+        "class_code": 3,
+        "precision": 1.0,
+        "recall": 0.9971264367816092,
+        "f1_score": 0.9985611510791367,
+        "support": 1044
+      },
+      "BOTNET_ANOMALY": {
+        "class_code": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 63
+      }
+    },
+    "confusion_matrix": [
+      [
+        5453,
+        0,
+        7,
+        0,
+        0
+      ],
+      [
+        29,
+        73,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        2999,
+        0,
+        0
+      ],
+      [
+        3,
+        0,
+        0,
+        1041,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        63
+      ]
+    ]
+  },
+  "evaluation_notes": [
+    "Temporal holdout with 60s guard buffers used for BOTNET_ANOMALY and PORT_SCAN.",
+    "BOTNET_ANOMALY test support is N=63 flows; evaluation is within-capture.",
+    "Calibrated probabilities evaluated via Expected Calibration Error (ECE) and Brier score.",
+    "Normal-traffic false-positive rate rigorously measured against true benign flows."
+  ]
+}

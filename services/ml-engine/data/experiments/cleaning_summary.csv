@@ -1,0 +1,4 @@
+run_id,dataset_archive,archive_size_bytes,total_raw_rows,exact_source_duplicates,valid_candidate_records,purged_conflict_groups,purged_conflict_rows,surviving_cleaned_records
+exp_20261025_cicids2017_rf_primary,dataset.zip,333841436,2100814,3143,1929795,239,162622,1767173
+exp_20261025_cicids2017_ablation_dos_hulk,dataset.zip,333841436,2100814,3143,2088264,239,162622,1925642
+exp_20261025_cicids2017_rf_v2_clean_bot,dataset.zip,333841436,2100814,3143,1929793,239,162622,1767171

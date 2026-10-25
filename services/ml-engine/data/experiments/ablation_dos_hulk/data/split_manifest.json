@@ -1,0 +1,50 @@
+{
+  "random_seed": 42,
+  "subsample_caps": {
+    "NORMAL": 35000,
+    "DOS_DDOS": 20000,
+    "PORT_SCAN": 15000
+  },
+  "temporal_guard_dropped_records": {
+    "PORT_SCAN": 217,
+    "BOTNET_ANOMALY": 63
+  },
+  "split_counts": {
+    "train": 52388,
+    "val": 9395,
+    "test": 9668,
+    "total": 71451
+  },
+  "per_class_splits": {
+    "NORMAL": {
+      "train": 24412,
+      "val": 5128,
+      "test": 5460,
+      "total": 35000
+    },
+    "PORT_SCAN": {
+      "train": 8595,
+      "val": 126,
+      "test": 102,
+      "total": 8823
+    },
+    "DOS_DDOS": {
+      "train": 13996,
+      "val": 3005,
+      "test": 2999,
+      "total": 20000
+    },
+    "BRUTE_FORCE": {
+      "train": 4867,
+      "val": 1042,
+      "test": 1044,
+      "total": 6953
+    },
+    "BOTNET_ANOMALY": {
+      "train": 518,
+      "val": 94,
+      "test": 63,
+      "total": 675
+    }
+  }
+}

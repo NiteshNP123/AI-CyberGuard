@@ -1,0 +1,148 @@
+{
+  "dataset_archive": "dataset.zip",
+  "archive_size_bytes": 333841436,
+  "include_dos_hulk": false,
+  "files_inspected": {
+    "Friday-WorkingHours.csv": {
+      "raw_rows": 547915,
+      "exact_duplicates": 2,
+      "labels": {
+        "BENIGN": 291433,
+        "Bot - Attempted": 1470,
+        "Bot": 738,
+        "PortScan": 159151,
+        "DDoS": 95123
+      },
+      "exclusions": {
+        "EXCLUDED_ATTEMPTED_ATTACK": 1469,
+        "EXACT_SOURCE_DUPLICATE": 2,
+        "INVALID_DURATION_NEGATIVE": 31
+      }
+    },
+    "Monday-WorkingHours.csv": {
+      "raw_rows": 371749,
+      "exact_duplicates": 0,
+      "labels": {
+        "BENIGN": 371749
+      },
+      "exclusions": {}
+    },
+    "Thursday-WorkingHours.csv": {
+      "raw_rows": 362368,
+      "exact_duplicates": 3141,
+      "labels": {
+        "BENIGN": 360264,
+        "Web Attack - Brute Force": 151,
+        "Web Attack - Brute Force - Attempted": 1214,
+        "Infiltration - Attempted": 16,
+        "Infiltration": 32,
+        "Web Attack - XSS - Attempted": 652,
+        "Web Attack - XSS": 27,
+        "Web Attack - Sql Injection": 12
+      },
+      "exclusions": {
+        "EXCLUDED_L7_PAYLOAD_REQUIRED": 190,
+        "EXCLUDED_ATTEMPTED_ATTACK": 1882,
+        "EXCLUDED_TINY_SAMPLE_INFILTRATION": 32,
+        "EXACT_SOURCE_DUPLICATE": 3141
+      }
+    },
+    "Tuesday-WorkingHours.csv": {
+      "raw_rows": 322003,
+      "exact_duplicates": 0,
+      "labels": {
+        "BENIGN": 315031,
+        "FTP-Patator": 3973,
+        "SSH-Patator": 2980,
+        "FTP-Patator - Attempted": 11,
+        "SSH-Patator - Attempted": 8
+      },
+      "exclusions": {
+        "EXCLUDED_ATTEMPTED_ATTACK": 19
+      }
+    },
+    "Wednesday-WorkingHours.csv": {
+      "raw_rows": 496779,
+      "exact_duplicates": 0,
+      "labels": {
+        "BENIGN": 319216,
+        "DoS slowloris": 4001,
+        "DoS slowloris - Attempted": 1731,
+        "DoS Slowhttptest": 1742,
+        "DoS Slowhttptest - Attempted": 3369,
+        "DoS Hulk": 158469,
+        "DoS Hulk - Attempted": 593,
+        "DoS GoldenEye": 7567,
+        "Heartbleed": 11,
+        "DoS GoldenEye - Attempted": 80
+      },
+      "exclusions": {
+        "EXCLUDED_ATTEMPTED_ATTACK": 5773,
+        "EXCLUDED_DOS_HULK": 158469,
+        "EXCLUDED_TINY_SAMPLE_HEARTBLEED": 11
+      }
+    }
+  },
+  "raw_label_counts": {
+    "BENIGN": 1657693,
+    "Bot - Attempted": 1470,
+    "Bot": 738,
+    "PortScan": 159151,
+    "DDoS": 95123,
+    "Web Attack - Brute Force": 151,
+    "Web Attack - Brute Force - Attempted": 1214,
+    "Infiltration - Attempted": 16,
+    "Infiltration": 32,
+    "Web Attack - XSS - Attempted": 652,
+    "Web Attack - XSS": 27,
+    "Web Attack - Sql Injection": 12,
+    "FTP-Patator": 3973,
+    "SSH-Patator": 2980,
+    "FTP-Patator - Attempted": 11,
+    "SSH-Patator - Attempted": 8,
+    "DoS slowloris": 4001,
+    "DoS slowloris - Attempted": 1731,
+    "DoS Slowhttptest": 1742,
+    "DoS Slowhttptest - Attempted": 3369,
+    "DoS Hulk": 158469,
+    "DoS Hulk - Attempted": 593,
+    "DoS GoldenEye": 7567,
+    "Heartbleed": 11,
+    "DoS GoldenEye - Attempted": 80
+  },
+  "exclusion_reasons": {
+    "EXCLUDED_ATTEMPTED_ATTACK": 9143,
+    "EXACT_SOURCE_DUPLICATE": 3143,
+    "INVALID_DURATION_NEGATIVE": 31,
+    "EXCLUDED_L7_PAYLOAD_REQUIRED": 190,
+    "EXCLUDED_TINY_SAMPLE_INFILTRATION": 32,
+    "EXCLUDED_DOS_HULK": 158469,
+    "EXCLUDED_TINY_SAMPLE_HEARTBLEED": 11
+  },
+  "total_raw_rows": 2100814,
+  "exact_source_duplicates": 3143,
+  "valid_candidate_records": 1929795,
+  "conflict_and_group_stats": {
+    "initial_candidate_records": 1929795,
+    "unique_feature_vectors": 1406370,
+    "conflicting_label_groups_purged": 239,
+    "conflicting_label_rows_purged": 162622,
+    "same_label_twin_groups": 67729,
+    "same_label_twin_duplicate_rows": 361042,
+    "surviving_cleaned_records": 1767173,
+    "class_counts_before_conflict_resolution": {
+      "NORMAL": 1654520,
+      "BOTNET_ANOMALY": 738,
+      "PORT_SCAN": 159151,
+      "DOS_DDOS": 108433,
+      "BRUTE_FORCE": 6953
+    },
+    "class_counts_after_conflict_resolution": {
+      "NORMAL": 1642009,
+      "BOTNET_ANOMALY": 738,
+      "PORT_SCAN": 9040,
+      "DOS_DDOS": 108433,
+      "BRUTE_FORCE": 6953
+    }
+  }
+}

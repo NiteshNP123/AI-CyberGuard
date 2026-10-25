@@ -1,0 +1,92 @@
+{
+  "classes": [
+    "NORMAL",
+    "PORT_SCAN",
+    "DOS_DDOS",
+    "BRUTE_FORCE",
+    "BOTNET_ANOMALY"
+  ],
+  "features": [
+    "flow_duration_ms",
+    "total_fwd_packets",
+    "total_bwd_packets",
+    "total_fwd_bytes",
+    "total_bwd_bytes",
+    "byte_rate",
+    "packet_rate",
+    "syn_flag_count",
+    "fin_flag_count",
+    "rst_flag_count",
+    "ack_flag_count",
+    "psh_flag_count",
+    "urg_flag_count",
+    "dst_port_standard",
+    "dst_port_ephemeral"
+  ],
+  "importances": {
+    "flow_duration_ms": 0.10162144768763771,
+    "total_fwd_packets": 0.12401103359085401,
+    "total_bwd_packets": 0.04559449855355483,
+    "total_fwd_bytes": 0.15527171680714608,
+    "total_bwd_bytes": 0.12062321063769439,
+    "byte_rate": 0.04739291089179369,
+    "packet_rate": 0.03940848155365262,
+    "syn_flag_count": 0.03961879678009813,
+    "fin_flag_count": 0.06690171891733991,
+    "rst_flag_count": 0.04396231780489259,
+    "ack_flag_count": 0.07621668289539207,
+    "psh_flag_count": 0.06725042798202865,
+    "urg_flag_count": 0.0,
+    "dst_port_standard": 0.029320190562456216,
+    "dst_port_ephemeral": 0.04280656533545922
+  },
+  "metrics": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "confusion_matrix": [
+      [
+        30,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        20,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        20,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        18,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        15
+      ]
+    ],
+    "training_samples": 410
+  },
+  "version": "1.0.0",
+  "dataset_sources": [
+    "CICIDS2017 Benchmark Flow Features",
+    "CSE-CIC-IDS2018 Attack Profiles"
+  ],
+  "limitations": "Model evaluates IP flow telemetry and TCP flag distributions. Encrypted payload inspection requires specialized decryption keys."
+}

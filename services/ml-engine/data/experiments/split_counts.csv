@@ -1,0 +1,16 @@
+run_id,class_name,train_count,val_count,test_count,total_count
+exp_20261025_cicids2017_rf_primary,NORMAL,24412,5128,5460,35000
+exp_20261025_cicids2017_rf_primary,PORT_SCAN,8595,126,102,8823
+exp_20261025_cicids2017_rf_primary,DOS_DDOS,13999,3007,2994,20000
+exp_20261025_cicids2017_rf_primary,BRUTE_FORCE,4867,1042,1044,6953
+exp_20261025_cicids2017_rf_primary,BOTNET_ANOMALY,518,94,63,675
+exp_20261025_cicids2017_ablation_dos_hulk,NORMAL,24412,5128,5460,35000
+exp_20261025_cicids2017_ablation_dos_hulk,PORT_SCAN,8595,126,102,8823
+exp_20261025_cicids2017_ablation_dos_hulk,DOS_DDOS,13996,3005,2999,20000
+exp_20261025_cicids2017_ablation_dos_hulk,BRUTE_FORCE,4867,1042,1044,6953
+exp_20261025_cicids2017_ablation_dos_hulk,BOTNET_ANOMALY,518,94,63,675
+exp_20261025_cicids2017_rf_v2_clean_bot,NORMAL,24412,5128,5460,35000
+exp_20261025_cicids2017_rf_v2_clean_bot,PORT_SCAN,8595,126,102,8823
+exp_20261025_cicids2017_rf_v2_clean_bot,DOS_DDOS,13999,3007,2994,20000
+exp_20261025_cicids2017_rf_v2_clean_bot,BRUTE_FORCE,4867,1042,1044,6953
+exp_20261025_cicids2017_rf_v2_clean_bot,BOTNET_ANOMALY,517,94,62,673

@@ -1,0 +1,23 @@
+{
+  "events": [],
+  "alerts": [],
+  "incidents": [],
+  "urlScans": [],
+  "messageScans": [],
+  "networkEvents": [],
+  "dnsEvents": [],
+  "loginEvents": [],
+  "fileScans": [],
+  "loginProfiles": {},
+  "settings": {
+    "id": "default",
+    "name": "",
+    "workspaceName": "",
+    "notificationEmail": "",
+    "criticalAlerts": true,
+    "weeklyDigest": false,
+    "dataRetention": "30 days",
+    "scanConfirmation": true,
+    "updatedAt": "2026-09-04T19:49:13.063Z"
+  }
+}

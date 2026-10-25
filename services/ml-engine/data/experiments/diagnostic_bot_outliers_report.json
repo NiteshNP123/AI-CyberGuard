@@ -1,0 +1,124 @@
+{
+  "audit_title": "Audit of Out-of-Window Effective Bot Records in CIC-IDS2017 (Friday)",
+  "dataset_source": "DistriNet Corrected CIC-IDS2017 (WTMC 2021) - Friday-WorkingHours.csv",
+  "total_effective_bot_records_in_dataset": 738,
+  "total_attempted_bot_records_excluded": 1470,
+  "main_c2_campaign_window_local_cest": {
+    "start": "2017-07-07 15:04:13 CEST (03:04:13 PM)",
+    "end": "2017-07-07 16:02:02 CEST (04:02:02 PM)",
+    "record_count": 736,
+    "documented_c2_target_ip": "205.174.165.73",
+    "c2_target_port": 80
+  },
+  "publisher_documentation_utc": {
+    "start_utc": "2017-07-07 13:04:13.990571 UTC",
+    "end_utc": "2017-07-07 14:02:02.903736 UTC",
+    "duration": "57 minutes, 49 seconds",
+    "documented_criteria": "Src IP in [192.168.10.15, 192.168.10.9, 192.168.10.14, 192.168.10.5, 192.168.10.8] && Dst IP == 205.174.165.73"
+  },
+  "out_of_window_records": [
+    {
+      "record_id": "outlier_bot_01_pre_campaign",
+      "dataset_split_assignment": "train",
+      "train_index": 51873,
+      "raw_timestamp": "07/07/2017 02:34:13 PM",
+      "parsed_timestamp_cest": "2017-07-07 14:34:13 CEST",
+      "equivalent_utc": "2017-07-07 12:34:13 UTC",
+      "features": {
+        "raw_timestamp": "07/07/2017 02:34:13 PM",
+        "label": "Bot",
+        "flow_duration_ms": 60260.639,
+        "total_fwd_packets": 10.0,
+        "total_bwd_packets": 10.0,
+        "total_fwd_bytes": 322.0,
+        "total_bwd_bytes": 256.0,
+        "flow_bytes_per_sec": 9.59166729048459,
+        "flow_packets_per_sec": 0.33189160174687166,
+        "syn_flags": 2.0,
+        "fin_flags": 2.0,
+        "rst_flags": 0.0,
+        "ack_flags": 19.0,
+        "psh_flags": 2.0,
+        "urg_flags": 0.0,
+        "dst_port": 8080,
+        "protocol": 6
+      },
+      "documentation_status": "UNRESOLVED_LABEL_ORIGIN: Not matched by DistriNet primary Ares C2 criteria (Dst IP != 205.174.165.73, Dst Port == 8080). Retained from UNB original labeling due to non-zero forward payload."
+    },
+    {
+      "record_id": "outlier_bot_02_post_campaign",
+      "dataset_split_assignment": "test",
+      "test_index": 9662,
+      "raw_timestamp": "07/07/2017 04:20:40 PM",
+      "parsed_timestamp_cest": "2017-07-07 16:20:40 CEST",
+      "equivalent_utc": "2017-07-07 14:20:40 UTC",
+      "features": {
+        "raw_timestamp": "07/07/2017 04:20:40 PM",
+        "label": "Bot",
+        "flow_duration_ms": 61054.877,
+        "total_fwd_packets": 11.0,
+        "total_bwd_packets": 11.0,
+        "total_fwd_bytes": 413.0,
+        "total_bwd_bytes": 256.0,
+        "flow_bytes_per_sec": 10.95735562615252,
+        "flow_packets_per_sec": 0.3603315751500081,
+        "syn_flags": 2.0,
+        "fin_flags": 2.0,
+        "rst_flags": 0.0,
+        "ack_flags": 21.0,
+        "psh_flags": 2.0,
+        "urg_flags": 0.0,
+        "dst_port": 8080,
+        "protocol": 6
+      },
+      "documentation_status": "UNRESOLVED_LABEL_ORIGIN: Occurs 18 minutes after C2 shutdown and 17 minutes after Bot-Attempted period began. Destination is non-C2 AWS IP on port 8080. Retained from UNB original labeling due to non-zero forward payload.",
+      "holdout_prediction_outcome": {
+        "model_predicted_class": "NORMAL",
+        "predicted_probabilities": {
+          "NORMAL": 0.599919,
+          "PORT_SCAN": 0.000436,
+          "DOS_DDOS": 0.000429,
+          "BRUTE_FORCE": 0.000272,
+          "BOTNET_ANOMALY": 0.398943
+        },
+        "diagnostic_finding": "This record is the exact and sole Bot false negative in the entire holdout evaluation."
+      }
+    }
+  ],
+  "sensitivity_analysis": {
+    "status": "DIAGNOSTIC_SENSITIVITY_ONLY (Not a formal re-evaluation; no holdout retuning)",
+    "baseline_holdout_bot_metrics": {
+      "evaluated_bot_support": 63,
+      "true_positives": 62,
+      "false_negatives": 1,
+      "point_recall": 0.984127,
+      "wilson_95_ci": [
+        0.9154,
+        0.9972
+      ],
+      "note": "Includes unverified out-of-window record 9662"
+    },
+    "diagnostic_holdout_bot_metrics_excluding_outlier": {
+      "evaluated_bot_support": 62,
+      "true_positives": 62,
+      "false_negatives": 0,
+      "point_recall": 1.0,
+      "wilson_95_ci": [
+        0.9417,
+        1.0
+      ],
+      "note": "Restricted strictly to documented Ares C2 campaign window"
+    },
+    "normal_traffic_fpr_impact": "INVARIANT (0.001465; exactly 8 false alarms / 5460 normal flows)",
+    "balanced_accuracy_impact": {
+      "baseline": 0.939211,
+      "diagnostic_excluding_outlier": 0.942386,
+      "delta": "+0.3175%"
+    }
+  },
+  "recommendation_for_future_revisions": [
+    "Formally add rule EXCLUDED_UNRESOLVED_OUT_OF_WINDOW_BOT in network_data_pipeline.py map_label().",
+    "Exclude both outlier records from training and test partitions unless an authoritative UNB/DistriNet erratum provides verified C2 attribution.",
+    "Document that in-window Ares C2 holdout detection is 100.0% (62/62), with the sole observed error attributable to the unverified post-campaign record."
+  ]
+}

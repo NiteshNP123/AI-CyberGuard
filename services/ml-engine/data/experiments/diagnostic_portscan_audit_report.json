@@ -1,0 +1,318 @@
+{
+  "audit_metadata": {
+    "report_id": "AUDIT_PORTSCAN_HOLDOUT_REPRESENTATIVENESS_20261025",
+    "generated_at": "2026-10-25T18:06:49.527796",
+    "experiment_name": "exp_20261025_cicids2017_rf_v2_clean_bot",
+    "candidate_model_sha256": "241EA38EB800D542C2019EA13CB70B1FF4FD2ED57D89AD86CD792195792DE5E4",
+    "candidate_scaler_sha256": "46272744A05D169CCE5E19D45673978B4FF6D6E8CC4F05055440BBEBAAF16790",
+    "production_models_verified_unmodified": true,
+    "production_models": {
+      "network_ids_model.joblib": "E35A77DC99FC941ADE05A551945563BD190BC7B39226CDC0DC7C78E587AE3647",
+      "network_scaler.joblib": "42A8D05BA199DB44984CE69512E2128C58A739E0C2197EA2111B40D018774703",
+      "network_metadata.json": "5C780B2F25093BDC6C3F08CB5E6E5C3AC035355EE49AA4506C83C4C1A61B0889"
+    }
+  },
+  "portscan_false_negatives_analysis": {
+    "summary": {
+      "total_test_support": 102,
+      "true_positives": 73,
+      "false_negatives": 29,
+      "false_positives": 0,
+      "recall": 0.715686,
+      "precision": 1.0,
+      "f1_score": 0.834286,
+      "predicted_class_for_all_fn": "NORMAL"
+    },
+    "probability_diagnostics": {
+      "mean_prob_NORMAL": 0.996919,
+      "min_prob_NORMAL": 0.994041,
+      "median_prob_NORMAL": 0.996622,
+      "max_prob_NORMAL": 0.999155,
+      "mean_prob_PORT_SCAN": 0.000777,
+      "mean_prob_DOS_DDOS": 0.001783,
+      "mean_prob_BRUTE_FORCE": 0.000312,
+      "mean_prob_BOTNET_ANOMALY": 0.000209
+    },
+    "signature_clustering": [
+      {
+        "cluster_name": "NetBIOS Session Service (Port 139) Probes",
+        "count": 17,
+        "percentage_of_fn": 58.62,
+        "signature": {
+          "fwd_packets": 6.0,
+          "bwd_packets": 4.0,
+          "fwd_bytes": 168.0,
+          "bwd_bytes": 127.0,
+          "syn_flags": 2.0,
+          "fin_flags": 2.0,
+          "rst_flags": 0.0,
+          "ack_flags": 9.0,
+          "psh_flags": 2.0,
+          "urg_flags": 0.0,
+          "dst_port_standard": 0.0,
+          "dst_port_ephemeral": 0.0
+        },
+        "duration_distribution": {
+          "fast_exchange_mode_ms": "10.69 - 20.75 ms (8 flows)",
+          "timeout_mode_ms": "6029.34 - 6033.65 ms (9 flows)"
+        },
+        "root_cause_explanation": "Probes targeting open port 139 on Windows victim (192.168.10.50). Completed full bidirectional TCP handshake, exchanged SMB/NetBIOS session setup, and tore down gracefully with 2 FIN packets. Identical flow signature to benign Windows file/print sharing traffic."
+      },
+      {
+        "cluster_name": "Microsoft-DS / SMB (Port 445) Probes",
+        "count": 9,
+        "percentage_of_fn": 31.03,
+        "signature": {
+          "fwd_packets": 5.0,
+          "bwd_packets": 3.0,
+          "fwd_bytes": 18.0,
+          "bwd_bytes": 0.0,
+          "syn_flags": 2.0,
+          "fin_flags": 2.0,
+          "rst_flags": 0.0,
+          "ack_flags": 7.0,
+          "psh_flags": 1.0,
+          "urg_flags": 0.0,
+          "dst_port_standard": 0.0,
+          "dst_port_ephemeral": 0.0
+        },
+        "duration_distribution": {
+          "mode_ms": "11013.61 - 11018.71 ms (8 flows), 8445.53 ms (1 flow)"
+        },
+        "root_cause_explanation": "Probes targeting open SMB port 445 on Windows victim. Exchanged negotiation packets, completed graceful 2-way FIN teardown without RST flags. Without packet payload inspection, flows appear identical to benign SMB connection attempts."
+      },
+      {
+        "cluster_name": "Outlier Probes",
+        "count": 3,
+        "percentage_of_fn": 10.34,
+        "flows": [
+          {
+            "record_id": 5460,
+            "feature_group_id": 284338,
+            "signature": "duration=0.161ms, fwd_pkts=1, bwd_pkts=1, fwd_bytes=48, bwd_bytes=48, all_flags=0",
+            "explanation": "Single-packet UDP request/response probe (e.g. NTP or RPC status), lacking TCP flags and exhibiting balanced 48-byte payload."
+          },
+          {
+            "record_id": 5461,
+            "feature_group_id": 71090,
+            "signature": "duration=108259.27ms, fwd_pkts=150, bwd_pkts=30, bytes=0, all_flags=0",
+            "explanation": "Extended zero-byte polling exchange with zero TCP flag counts recorded, characteristic of background polling."
+          },
+          {
+            "record_id": 5462,
+            "feature_group_id": 225093,
+            "signature": "duration=2113.28ms, fwd_pkts=6, bwd_pkts=2, bytes=0, all_flags=0",
+            "explanation": "Brief multi-packet exchange with zero payload bytes and zero flags recorded."
+          }
+        ]
+      }
+    ],
+    "feature_distribution_comparison": {
+      "train_portscan_characteristics": {
+        "fin_flag_count_equals_0": "99.38% (8,542 / 8,595 flows)",
+        "fin_flag_count_equals_2": "0.38% (33 / 8,595 flows)",
+        "mean_rst_flag_count": 0.9962,
+        "median_ack_flag_count": 1.0,
+        "mean_packet_rate": 2112.09,
+        "port_profile": "Sweeping thousands of closed ports -> instant RST packet returned -> 0 FIN flags"
+      },
+      "holdout_fn_portscan_characteristics": {
+        "fin_flag_count_equals_2": "89.66% (26 / 29 flows)",
+        "mean_rst_flag_count": 0.0,
+        "median_ack_flag_count": 9.0,
+        "port_profile": "Targeting open ports (139, 445) -> full TCP handshake -> graceful FIN teardown -> 0 RST flags"
+      },
+      "train_normal_characteristics": {
+        "fin_flag_count_greater_0": "40.5% of flows",
+        "mean_fin_flag_count": 0.6586,
+        "mean_ack_flag_count": 39.06,
+        "mean_rst_flag_count": 0.1959
+      }
+    }
+  },
+  "split_representativeness_audit": {
+    "finding": "The 8,595 train / 126 val / 102 test split is the direct consequence of rigorous anti-leakage grouping and temporal chunking of CIC-IDS2017 PortScan traffic.",
+    "temporal_dynamics": {
+      "total_attack_duration_sec": 2806.0,
+      "total_attack_duration_min": 46.77,
+      "start_time": "Friday 17:37:37",
+      "end_time": "Friday 18:24:23",
+      "early_phase_behavior": "Automated rapid sweeping across thousands of closed ports. Produced 405 multi-record feature twin groups containing 8,006 duplicate records (largest cluster: 442 records). Under 70% unique-group temporal chunking, all early groups landed in train.",
+      "late_phase_behavior": "Varied service scanning and probing against specific individual ports. Generated almost exclusively singleton groups (val: 122 singletons / 124 groups = 98.39%; test: 100 singletons / 101 groups = 99.01%).",
+      "guard_buffer": "A 60-second temporal guard dropped 217 boundary records between partitions, completely eliminating cross-boundary flow correlation."
+    },
+    "leakage_verification": {
+      "feature_twin_groups_train": 994,
+      "feature_twin_groups_val": 124,
+      "feature_twin_groups_test": 101,
+      "train_val_group_overlap": 0,
+      "train_test_group_overlap": 0,
+      "val_test_group_overlap": 0,
+      "data_leakage_status": "ZERO_LEAKAGE_CONFIRMED"
+    },
+    "all_classes_split_summary": [
+      {
+        "class_name": "NORMAL",
+        "train_records": 24412,
+        "val_records": 5128,
+        "test_records": 5460,
+        "total_records": 35000,
+        "train_groups": 20014,
+        "val_groups": 4288,
+        "test_groups": 4290,
+        "total_groups": 28592,
+        "train_pct_records": 69.75,
+        "val_pct_records": 14.65,
+        "test_pct_records": 15.6,
+        "train_pct_groups": 70.0,
+        "val_pct_groups": 15.0,
+        "test_pct_groups": 15.0,
+        "train_max_group_size": 348,
+        "val_max_group_size": 64,
+        "test_max_group_size": 97
+      },
+      {
+        "class_name": "PORT_SCAN",
+        "train_records": 8595,
+        "val_records": 126,
+        "test_records": 102,
+        "total_records": 8823,
+        "train_groups": 994,
+        "val_groups": 124,
+        "test_groups": 101,
+        "total_groups": 1219,
+        "train_pct_records": 97.42,
+        "val_pct_records": 1.43,
+        "test_pct_records": 1.16,
+        "train_pct_groups": 81.54,
+        "val_pct_groups": 10.17,
+        "test_pct_groups": 8.29,
+        "train_max_group_size": 442,
+        "val_max_group_size": 2,
+        "test_max_group_size": 2
+      },
+      {
+        "class_name": "DOS_DDOS",
+        "train_records": 13999,
+        "val_records": 3007,
+        "test_records": 2994,
+        "total_records": 20000,
+        "train_groups": 13867,
+        "val_groups": 2971,
+        "test_groups": 2973,
+        "total_groups": 19811,
+        "train_pct_records": 70.0,
+        "val_pct_records": 15.04,
+        "test_pct_records": 14.97,
+        "train_pct_groups": 70.0,
+        "val_pct_groups": 15.0,
+        "test_pct_groups": 15.01,
+        "train_max_group_size": 11,
+        "val_max_group_size": 13,
+        "test_max_group_size": 6
+      },
+      {
+        "class_name": "BRUTE_FORCE",
+        "train_records": 4867,
+        "val_records": 1042,
+        "test_records": 1044,
+        "total_records": 6953,
+        "train_groups": 4865,
+        "val_groups": 1042,
+        "test_groups": 1044,
+        "total_groups": 6951,
+        "train_pct_records": 70.0,
+        "val_pct_records": 14.99,
+        "test_pct_records": 15.02,
+        "train_pct_groups": 69.99,
+        "val_pct_groups": 14.99,
+        "test_pct_groups": 15.02,
+        "train_max_group_size": 2,
+        "val_max_group_size": 1,
+        "test_max_group_size": 1
+      },
+      {
+        "class_name": "BOTNET_ANOMALY",
+        "train_records": 517,
+        "val_records": 94,
+        "test_records": 62,
+        "total_records": 673,
+        "train_groups": 517,
+        "val_groups": 94,
+        "test_groups": 62,
+        "total_groups": 673,
+        "train_pct_records": 76.82,
+        "val_pct_records": 13.97,
+        "test_pct_records": 9.21,
+        "train_pct_groups": 76.82,
+        "val_pct_groups": 13.97,
+        "test_pct_groups": 9.21,
+        "train_max_group_size": 1,
+        "val_max_group_size": 1,
+        "test_max_group_size": 1
+      }
+    ]
+  },
+  "evaluation_reliability_and_uncertainty": {
+    "sample_sensitivity": {
+      "portscan_test_support": 102,
+      "single_sample_recall_delta": 0.009804,
+      "single_sample_percentage_delta": 0.9804
+    },
+    "wilson_95_confidence_intervals": {
+      "PORT_SCAN_recall": {
+        "support": 102,
+        "point_estimate": 0.715686,
+        "ci_lower": 0.621611,
+        "ci_upper": 0.794248,
+        "ci_width": 0.172637,
+        "interpretation": "Wide confidence interval (17.26 percentage points) due to small holdout support (102). True population recall against diverse probing is expected to fall between 62.16% and 79.42%."
+      },
+      "NORMAL_recall": {
+        "support": 5460,
+        "point_estimate": 0.998535,
+        "ci_lower": 0.997129,
+        "ci_upper": 0.999252,
+        "ci_width": 0.002123,
+        "interpretation": "Extremely narrow CI (0.21 percentage points), confirming robust normal flow classification."
+      },
+      "DOS_DDOS_recall": {
+        "support": 2994,
+        "point_estimate": 0.998664,
+        "ci_lower": 0.996587,
+        "ci_upper": 0.999478,
+        "ci_width": 0.002891,
+        "interpretation": "Extremely tight CI (0.29 percentage points)."
+      },
+      "BRUTE_FORCE_recall": {
+        "support": 1044,
+        "point_estimate": 0.999042,
+        "ci_lower": 0.994601,
+        "ci_upper": 0.999831,
+        "ci_width": 0.00523,
+        "interpretation": "Tight CI (0.52 percentage points)."
+      },
+      "BOTNET_ANOMALY_recall": {
+        "support": 62,
+        "point_estimate": 1.0,
+        "ci_lower": 0.941712,
+        "ci_upper": 1.0,
+        "ci_width": 0.058288,
+        "interpretation": "Perfect recall on holdout, with 95% lower bound at 94.17%."
+      },
+      "NORMAL_fpr": {
+        "support": 5460,
+        "point_estimate": 0.001465,
+        "ci_lower": 0.000743,
+        "ci_upper": 0.002889,
+        "ci_width": 0.002146,
+        "interpretation": "Only 8 false alarms out of 5,460 holdout normal flows (all classified as DOS_DDOS, 0 as PORT_SCAN)."
+      }
+    }
+  },
+  "recommendations_and_verdict": {
+    "data_splitting_safeguard": "Do NOT break group-preserving splits or shuffle duplicate feature twins into val/test. Shuffling would artificially inflate PortScan test recall to >99% via feature-twin memorization (data leakage). The current 71.57% recall accurately reflects the model's true generalization capacity on non-leaked, out-of-sample scanning activity.",
+    "architectural_recommendation": "Single-flow ML models are fundamentally blind to whether a completed TCP connection to port 139/445 was part of a port scan or legitimate user activity, because the transport features are identical. Robust port scan detection requires stateful, time-windowed multi-flow aggregation (e.g. tracking unique destination ports per source IP within a 5-minute sliding window), which is already supported by the stateful sensor pipeline refactored in Batch 5.",
+    "model_promotion_verdict": "Production models remain unmodified and baseline-verified. Candidate exp_20261025_cicids2017_rf_v2_clean_bot represents an audited, leakage-free benchmark with 99.57% accuracy, 0.15% normal FPR, and documented 71.57% PortScan recall on late-stage open-port probing."
+  }
+}

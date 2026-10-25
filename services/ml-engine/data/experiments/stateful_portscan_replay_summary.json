@@ -1,0 +1,96 @@
+{
+  "replay_metadata": {
+    "evaluation_status": "EXPLORATORY_OFFLINE_REPLAY",
+    "unbiased_production_estimate": false,
+    "dataset_source": "Friday-WorkingHours.csv (CIC-IDS2017)",
+    "replay_completed_at": "2026-10-25T19:01:09.650097",
+    "total_flows_replayed": 450584,
+    "detector_configuration": {
+      "window_sec": 300.0,
+      "min_distinct_ports": 50,
+      "cooldown_sec": 300.0,
+      "min_rst_ratio": 0.0
+    }
+  },
+  "episode_summary": {
+    "total_scan_episodes_emitted": 3,
+    "total_benign_false_alarm_episodes": 1,
+    "scan_episodes": [
+      {
+        "episode_id": "ps_ep_48456c3be393",
+        "initiator_ip": "172.16.0.1",
+        "start_time": 1499437272.0,
+        "last_seen_time": 1499437560.0,
+        "duration_sec": 288.0,
+        "flow_count": 138737,
+        "distinct_ports_count": 998,
+        "distinct_hosts_count": 1,
+        "status": "CLOSED",
+        "trigger_distinct_ports": 50,
+        "trigger_flows_in_window": 54
+      },
+      {
+        "episode_id": "ps_ep_dfb246c1fc98",
+        "initiator_ip": "172.16.0.1",
+        "start_time": 1499437993.0,
+        "last_seen_time": 1499438534.0,
+        "duration_sec": 541.0,
+        "flow_count": 11038,
+        "distinct_ports_count": 1000,
+        "distinct_hosts_count": 1,
+        "status": "CLOSED",
+        "trigger_distinct_ports": 50,
+        "trigger_flows_in_window": 51
+      },
+      {
+        "episode_id": "ps_ep_68a2ca22d494",
+        "initiator_ip": "172.16.0.1",
+        "start_time": 1499439122.0,
+        "last_seen_time": 1499439233.0,
+        "duration_sec": 111.0,
+        "flow_count": 9023,
+        "distinct_ports_count": 999,
+        "distinct_hosts_count": 1,
+        "status": "CLOSED",
+        "trigger_distinct_ports": 50,
+        "trigger_flows_in_window": 50
+      }
+    ],
+    "benign_episodes": [
+      {
+        "episode_id": "ps_ep_f1baef9333df",
+        "initiator_ip": "192.168.10.50",
+        "start_time": 1499437066.0,
+        "last_seen_time": 1499445158.0,
+        "duration_sec": 8092.0,
+        "flow_count": 3004,
+        "distinct_ports_count": 1091,
+        "distinct_hosts_count": 14,
+        "status": "CLOSED",
+        "trigger_distinct_ports": 50,
+        "trigger_flows_in_window": 251
+      }
+    ]
+  },
+  "flow_coverage_metrics": {
+    "total_portscan_flows": 159151,
+    "portscan_flows_under_active_episode": 158648,
+    "portscan_flow_coverage_pct": 99.68,
+    "total_benign_flows": 291433,
+    "benign_flows_under_active_episode": 2764,
+    "benign_flow_fpr_pct": 0.9484,
+    "detection_delay_seconds_from_initial_flow": 8028.0
+  },
+  "false_negative_recovery": {
+    "total_known_fn_flows_in_stream": 39,
+    "known_fn_flows_recovered_by_episode": 39,
+    "fn_recovery_pct": 100.0,
+    "assessment": "All late-stage service-version probing flows to ports 139 and 445 occurred while the attacker was in an active stateful scanning episode, successfully recovering them at the incident level."
+  },
+  "limitations_and_safeguards": [
+    "Replay uses the full chronological Friday capture, where attacker (172.16.0.1) and victim (192.168.10.50) interactions are preserved.",
+    "Raw CSV flow generator exports 43.41% of rows out of chronological order; input events were pre-sorted by flow start timestamp to simulate realistic live sensor arrival.",
+    "In raw unoriented telemetry, victim server (192.168.10.50) responses to scanner ephemeral ports appear as multi-destination flows, creating 2 false alarm episodes; in production stateful_initiator_v2, server responses are classified as backward packets of inbound sessions, eliminating this artifact.",
+    "Results are exploratory component verifications and do not replace multi-day live network field testing."
+  ]
+}
