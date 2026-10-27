@@ -1,8 +1,33 @@
-import { Archive, CheckCircle2, ChevronDown, Eye, Filter, RefreshCw, Search, ShieldAlert, Trash2, XCircle } from 'lucide-react';
+import {
+  Archive,
+  CheckCircle2,
+  ChevronDown,
+  Eye,
+  Filter,
+  RefreshCw,
+  Search,
+  ShieldAlert,
+  Trash2,
+  XCircle,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { getGetAlertsQueryKey, getGetDashboardSummaryQueryKey, useGetAlerts } from '@workspace/api-client-react';
+import {
+  getGetAlertsQueryKey,
+  getGetDashboardSummaryQueryKey,
+  useGetAlerts,
+} from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { EmptyState, PageHeader, QueryError, SeverityBadge, SkeletonBlock, StatusBadge, formatTimestamp, scoreTone } from '@/components/ui-kit';
+import {
+  EmptyState,
+  PageHeader,
+  QueryError,
+  RevealSection,
+  SeverityBadge,
+  SkeletonBlock,
+  StatusBadge,
+  formatTimestamp,
+  scoreTone,
+} from '@/components/ui-kit';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Alerts() {
@@ -22,17 +47,24 @@ export default function Alerts() {
       (alertsQuery.data || []).filter(
         (alert) =>
           (filter === 'ALL' || alert.status === filter) &&
-          `${alert.title} ${alert.source} ${alert.description}`.toLowerCase().includes(search.toLowerCase())
+          `${alert.title} ${alert.source} ${alert.description}`
+            .toLowerCase()
+            .includes(search.toLowerCase())
       ),
     [alertsQuery.data, filter, search]
   );
 
   const activeCount = useMemo(
-    () => (alertsQuery.data || []).filter((a) => a.status === 'NEW' || a.status === 'INVESTIGATING').length,
+    () =>
+      (alertsQuery.data || []).filter((a) => a.status === 'NEW' || a.status === 'INVESTIGATING')
+        .length,
     [alertsQuery.data]
   );
 
-  const handleUpdateStatus = async (alertId: string, newStatus: 'INVESTIGATING' | 'RESOLVED' | 'FALSE_POSITIVE') => {
+  const handleUpdateStatus = async (
+    alertId: string,
+    newStatus: 'INVESTIGATING' | 'RESOLVED' | 'FALSE_POSITIVE'
+  ) => {
     try {
       setUpdatingId(alertId);
       const res = await fetch(`/api/alerts/${alertId}/status`, {
@@ -57,7 +89,7 @@ export default function Alerts() {
       setBulkResolving(true);
       const res = await fetch('/api/alerts/bulk-resolve', {
         method: 'POST',
-        headers: { 'X-Workspace-Token': import.meta.env.VITE_WORKSPACE_TOKEN || '' }
+        headers: { 'X-Workspace-Token': import.meta.env.VITE_WORKSPACE_TOKEN || '' },
       });
       const data = await res.json();
       if (res.ok) {
@@ -79,15 +111,14 @@ export default function Alerts() {
       setClearConfirmStep('confirm');
       return;
     }
-    // Second click = confirmed
     try {
       setClearing(true);
       const res = await fetch('/api/alerts', {
         method: 'DELETE',
         headers: {
           'X-Confirm-Clear': 'yes-delete-all',
-          'X-Workspace-Token': import.meta.env.VITE_WORKSPACE_TOKEN || ''
-        }
+          'X-Workspace-Token': import.meta.env.VITE_WORKSPACE_TOKEN || '',
+        },
       });
       const data = await res.json();
       if (res.ok) {
@@ -113,37 +144,39 @@ export default function Alerts() {
         description="A real-time queue for security signals that need triage. Disposition decisions update workspace posture in real-time."
         action={
           <div className="flex flex-wrap items-center gap-2">
-            {/* Bulk resolve — marks all active alerts as RESOLVED without deleting */}
             {activeCount > 0 && (
               <button
                 data-testid="button-bulk-resolve-alerts"
                 onClick={handleBulkResolve}
                 disabled={bulkResolving}
-                className="cg-btn cg-btn-quiet !text-[11px] disabled:opacity-60"
+                className="cg-btn cg-btn-quiet disabled:opacity-60"
               >
                 <CheckCircle2 size={13} className={bulkResolving ? 'animate-pulse' : ''} />
                 {bulkResolving ? 'Resolving…' : `Resolve all (${activeCount})`}
               </button>
             )}
-            {/* Clear all — permanently deletes all alerts, requires two-click confirmation */}
             <button
               data-testid="button-clear-all-alerts"
               onClick={handleClearAll}
               onBlur={() => { if (clearConfirmStep === 'confirm') setClearConfirmStep('idle'); }}
               disabled={clearing || (alertsQuery.data || []).length === 0}
-              className={`cg-btn !text-[11px] disabled:opacity-50 ${
+              className={`cg-btn disabled:opacity-50 ${
                 clearConfirmStep === 'confirm'
-                  ? 'cg-btn-primary !bg-destructive !border-destructive hover:!bg-destructive/90'
-                  : 'cg-btn-quiet text-muted-foreground hover:text-destructive'
+                  ? 'cg-btn-danger'
+                  : 'cg-btn-quiet'
               }`}
             >
               <Trash2 size={13} className={clearing ? 'animate-pulse' : ''} />
-              {clearing ? 'Clearing…' : clearConfirmStep === 'confirm' ? 'Tap again to confirm delete' : 'Clear all alerts'}
+              {clearing
+                ? 'Clearing…'
+                : clearConfirmStep === 'confirm'
+                ? 'Tap again to confirm'
+                : 'Clear all'}
             </button>
             <button
               data-testid="button-refresh-alerts"
               onClick={() => alertsQuery.refetch()}
-              className="cg-btn cg-btn-quiet !text-[11px]"
+              className="cg-btn cg-btn-quiet"
             >
               <RefreshCw size={13} className={alertsQuery.isFetching ? 'animate-spin' : ''} />
               Refresh
@@ -151,129 +184,183 @@ export default function Alerts() {
           </div>
         }
       />
-      <section className="cg-panel overflow-hidden">
-        <div className="flex flex-col gap-3 border-b border-border p-4 md:flex-row md:items-center md:justify-between">
-          <div className="relative max-w-[330px] flex-1">
-            <Search className="absolute left-3 top-3 text-muted-foreground" size={15} />
-            <input
-              data-testid="input-search-alerts"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search alert title, source or evidence"
-              className="cg-input pl-9 text-[11px]"
-            />
+
+      <RevealSection>
+        <section className="cg-panel overflow-hidden">
+          {/* Filter bar */}
+          <div
+            className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+            style={{ borderBottom: '1px solid var(--border-warm)', background: 'var(--surface-soft)' }}
+          >
+            <div className="relative w-full max-w-[340px] flex items-center">
+              <div className="cg-input-icon">
+                <Search size={15} />
+              </div>
+              <input
+                data-testid="input-search-alerts"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search alert title, source or evidence…"
+                className="cg-input cg-input-with-icon h-[40px] text-[12px]"
+              />
+            </div>
+            <div className="flex items-center gap-2.5">
+              <span className="cg-kicker hidden text-[9px] sm:inline" style={{ color: 'var(--olive-text)' }}>Status</span>
+              <div className="relative flex items-center">
+                <select
+                  data-testid="select-alert-status-filter"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  className="cg-input h-[40px] w-auto cursor-pointer pr-8 text-[12px]"
+                  style={{ minWidth: '140px' }}
+                >
+                  <option value="ALL">All statuses</option>
+                  <option value="NEW">New</option>
+                  <option value="INVESTIGATING">Investigating</option>
+                  <option value="RESOLVED">Resolved</option>
+                  <option value="FALSE_POSITIVE">False positive</option>
+                </select>
+                <Filter size={13} className="pointer-events-none absolute right-3" style={{ color: 'var(--cg-muted)' }} />
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Filter size={14} className="text-muted-foreground" />
-            <select
-              data-testid="select-alert-status-filter"
-              value={filter}
-              onChange={(event) => setFilter(event.target.value)}
-              className="cg-input w-auto py-2 text-[11px]"
-            >
-              <option value="ALL">All statuses</option>
-              <option value="NEW">New</option>
-              <option value="INVESTIGATING">Investigating</option>
-              <option value="RESOLVED">Resolved</option>
-              <option value="FALSE_POSITIVE">False positive</option>
-            </select>
-          </div>
-        </div>
-        {alertsQuery.isError ? (
-          <QueryError onRetry={() => alertsQuery.refetch()} label="Alert queue is temporarily unavailable." />
-        ) : alertsQuery.isLoading ? (
-          <div className="space-y-3 p-5">
-            <SkeletonBlock className="h-16" />
-            <SkeletonBlock className="h-16" />
-            <SkeletonBlock className="h-16" />
-          </div>
-        ) : alerts.length ? (
-          <div className="divide-y divide-border">
-            {alerts.map((alert) => {
-              const isOpen = expanded === alert.id;
-              return (
-                <div data-testid={`row-alert-${alert.id}`} key={alert.id} className="transition-colors hover:bg-muted/30">
-                  <button
-                    data-testid={`button-expand-alert-${alert.id}`}
-                    onClick={() => setExpanded(isOpen ? null : alert.id)}
-                    className="cg-focus flex w-full items-center gap-3 px-5 py-4 text-left"
-                  >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-destructive/8 text-destructive">
-                      <ShieldAlert size={15} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="truncate text-[12px] font-bold">{alert.title}</span>
-                        <SeverityBadge severity={alert.severity} />
-                      </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
-                        <span className="font-semibold text-foreground/80">{alert.source}</span>
-                        <span className="h-1 w-1 rounded-full bg-border" />
-                        <span>{formatTimestamp(alert.timestamp)}</span>
-                      </div>
-                    </div>
-                    <div className={`hidden cg-mono text-[12px] font-medium sm:block ${scoreTone(alert.score)}`}>
-                      {alert.score}
-                    </div>
-                    <StatusBadge status={alert.status} />
-                    <ChevronDown
-                      size={15}
-                      className={`shrink-0 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-                  {isOpen && (
-                    <div className="ml-[59px] mr-5 border-t border-border py-4 space-y-3">
-                      <p data-testid={`text-alert-description-${alert.id}`} className="max-w-[850px] text-[12px] leading-relaxed text-muted-foreground">
-                        {alert.description}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-2 pt-2">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase mr-2">Triage Action:</span>
-                        {alert.status !== 'INVESTIGATING' && (
-                          <button
-                            disabled={updatingId === alert.id}
-                            onClick={() => handleUpdateStatus(alert.id, 'INVESTIGATING')}
-                            className="cg-btn cg-btn-quiet !py-1 !px-2.5 !text-[10px]"
-                          >
-                            <Eye size={12} /> Investigate
-                          </button>
-                        )}
-                        {alert.status !== 'RESOLVED' && (
-                          <button
-                            disabled={updatingId === alert.id}
-                            onClick={() => handleUpdateStatus(alert.id, 'RESOLVED')}
-                            className="cg-btn cg-btn-primary !py-1 !px-2.5 !text-[10px]"
-                          >
-                            <CheckCircle2 size={12} /> Mark Resolved
-                          </button>
-                        )}
-                        {alert.status !== 'FALSE_POSITIVE' && (
-                          <button
-                            disabled={updatingId === alert.id}
-                            onClick={() => handleUpdateStatus(alert.id, 'FALSE_POSITIVE')}
-                            className="cg-btn cg-btn-quiet !py-1 !px-2.5 !text-[10px] text-muted-foreground hover:text-foreground"
-                          >
-                            <XCircle size={12} /> False Positive
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
+
+          {/* Alert list */}
+          {alertsQuery.isError ? (
+            <QueryError onRetry={() => alertsQuery.refetch()} label="Alert queue is temporarily unavailable." />
+          ) : alertsQuery.isLoading ? (
+            <div>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-4 px-5 py-4" style={{ borderBottom: '1px solid var(--border-warm)' }}>
+                  <SkeletonBlock className="h-9 w-9 shrink-0 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <SkeletonBlock className="h-3.5 w-1/3" />
+                    <SkeletonBlock className="h-2.5 w-1/4" />
+                  </div>
+                  <SkeletonBlock className="h-5 w-16 rounded-full" />
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          <EmptyState
-            icon={Archive}
-            title={search || filter !== 'ALL' ? 'No matching alerts' : 'Your queue is clear'}
-            detail={
-              search || filter !== 'ALL'
-                ? 'Try a different filter or search phrase.'
-                : 'New signals requiring attention will appear here automatically via live WebSocket telemetry.'
-            }
-          />
-        )}
-      </section>
+              ))}
+            </div>
+          ) : alerts.length ? (
+            <div>
+              {alerts.map((alert) => {
+                const isOpen = expanded === alert.id;
+                return (
+                  <div
+                    data-testid={`row-alert-${alert.id}`}
+                    key={alert.id}
+                    className="kage-row relative"
+                    style={{ borderBottom: '1px solid var(--border-warm)' }}
+                  >
+                    <span className="kage-row-bar" />
+                    <button
+                      data-testid={`button-expand-alert-${alert.id}`}
+                      onClick={() => setExpanded(isOpen ? null : alert.id)}
+                      className="cg-focus flex w-full items-center gap-3 px-5 py-4 text-left"
+                    >
+                      <div
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                        style={{ background: 'rgba(216,115,85,.10)', color: 'var(--terracotta-text)' }}
+                      >
+                        <ShieldAlert size={14} strokeWidth={1.8} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className="truncate text-[12px] font-medium"
+                            style={{ color: 'var(--text-primary)' }}
+                          >
+                            {alert.title}
+                          </span>
+                          <SeverityBadge severity={alert.severity} />
+                        </div>
+                        <div
+                          className="mt-1 flex flex-wrap items-center gap-2 text-[10px]"
+                          style={{ color: 'var(--cg-muted)' }}
+                        >
+                          <span style={{ color: 'var(--text-secondary)' }}>{alert.source}</span>
+                          <span className="h-1 w-1 rounded-full" style={{ background: 'var(--border-warm)' }} />
+                          <span>{formatTimestamp(alert.timestamp)}</span>
+                        </div>
+                      </div>
+                      <div className={`hidden cg-mono text-[12px] font-medium sm:block ${scoreTone(alert.score)}`}>
+                        {alert.score}
+                      </div>
+                      <StatusBadge status={alert.status} />
+                      <ChevronDown
+                        size={14}
+                        className={`shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                        style={{ color: 'var(--cg-muted)' }}
+                      />
+                    </button>
+
+                    {isOpen && (
+                      <div
+                        className="ml-[59px] mr-5 space-y-3 py-4"
+                        style={{ borderTop: '1px solid var(--border-warm)' }}
+                      >
+                        <p
+                          data-testid={`text-alert-description-${alert.id}`}
+                          className="max-w-[820px] text-[12px] leading-relaxed"
+                          style={{ color: 'var(--text-secondary)' }}
+                        >
+                          {alert.description}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                          <span
+                            className="cg-kicker mr-2"
+                            style={{ fontSize: '9px', color: 'var(--olive-text)' }}
+                          >
+                            Triage:
+                          </span>
+                          {alert.status !== 'INVESTIGATING' && (
+                            <button
+                              disabled={updatingId === alert.id}
+                              onClick={() => handleUpdateStatus(alert.id, 'INVESTIGATING')}
+                              className="cg-btn cg-btn-quiet !py-1 !px-2.5 !text-[10px]"
+                            >
+                              <Eye size={11} /> Investigate
+                            </button>
+                          )}
+                          {alert.status !== 'RESOLVED' && (
+                            <button
+                              disabled={updatingId === alert.id}
+                              onClick={() => handleUpdateStatus(alert.id, 'RESOLVED')}
+                              className="cg-btn cg-btn-primary !py-1 !px-2.5 !text-[10px]"
+                            >
+                              <CheckCircle2 size={11} /> Mark Resolved
+                            </button>
+                          )}
+                          {alert.status !== 'FALSE_POSITIVE' && (
+                            <button
+                              disabled={updatingId === alert.id}
+                              onClick={() => handleUpdateStatus(alert.id, 'FALSE_POSITIVE')}
+                              className="cg-btn cg-btn-quiet !py-1 !px-2.5 !text-[10px]"
+                              style={{ color: 'var(--cg-muted)' }}
+                            >
+                              <XCircle size={11} /> False Positive
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Archive}
+              title={search || filter !== 'ALL' ? 'No matching alerts' : 'Your queue is clear'}
+              detail={
+                search || filter !== 'ALL'
+                  ? 'Try a different filter or search phrase.'
+                  : 'New signals requiring attention will appear here automatically via live WebSocket telemetry.'
+              }
+            />
+          )}
+        </section>
+      </RevealSection>
     </div>
   );
 }

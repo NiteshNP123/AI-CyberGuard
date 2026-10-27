@@ -1,20 +1,54 @@
-import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Radar } from 'lucide-react';
 import { Link } from 'wouter';
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-[65dvh] w-full items-center justify-center">
-      <Card className="w-full max-w-md mx-4">
-        <CardContent className="pt-6">
-          <div className="mb-4 flex gap-3">
-            <Radar className="h-8 w-8 text-primary" />
-            <div><div className="cg-kicker">Signal lost</div><h1 className="mt-1 text-2xl font-extrabold tracking-[-.04em]">Page not found</h1></div>
-          </div>
-          <p className="mt-4 text-sm text-muted-foreground">That route is outside the monitored surface.</p>
-          <Link href="/" data-testid="link-back-to-overview" className="cg-btn cg-btn-primary mt-5"><ArrowLeft size={14} />Back to overview</Link>
-        </CardContent>
-      </Card>
+    <div
+      className="flex min-h-[70dvh] w-full flex-col items-center justify-center p-8 text-center"
+    >
+      {/* Large muted numeral */}
+      <div
+        className="cg-mono mb-4 select-none text-[96px] font-light leading-none tracking-[-.06em]"
+        style={{ color: 'rgba(139,134,92,.12)' }}
+        aria-hidden="true"
+      >
+        404
+      </div>
+
+      {/* Icon + heading */}
+      <div className="mb-4 flex items-center gap-3">
+        <div
+          className="flex h-10 w-10 items-center justify-center rounded-full"
+          style={{ background: 'rgba(216,115,85,.12)', color: 'var(--terracotta-text)' }}
+        >
+          <Radar size={18} strokeWidth={1.6} />
+        </div>
+        <div className="text-left">
+          <div className="cg-kicker" style={{ color: 'var(--olive-text)' }}>Signal lost</div>
+          <h1
+            className="mt-0.5 text-[22px] font-medium tracking-[-.04em]"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Page not found
+          </h1>
+        </div>
+      </div>
+
+      <p
+        className="mb-7 max-w-[340px] text-[13px] leading-relaxed"
+        style={{ color: 'var(--text-secondary)' }}
+      >
+        That route is outside the monitored surface. Return to the security console.
+      </p>
+
+      <Link
+        href="/"
+        data-testid="link-back-to-overview"
+        className="cg-btn cg-btn-quiet"
+      >
+        <ArrowLeft size={13} />
+        Back to overview
+      </Link>
     </div>
   );
 }
